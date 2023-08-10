@@ -124,17 +124,21 @@ class PlexConfig(ConfigSection):
         }
 
 
-class TautulliConfig(ConfigSection):
+class VlcConfig(ConfigSection):
     def __init__(self, data, pull_from_env: bool = True):
-        super().__init__(section_key="Tautulli", data=data, pull_from_env=pull_from_env)
+        super().__init__(section_key="VLC", data=data, pull_from_env=pull_from_env)
 
     @property
-    def api_key(self) -> str:
-        return self._get_value(key="APIKey", env_name_override="PR_TAUTULLI_KEY")
+    def password(self) -> str:
+        return self._get_value(key="Password", env_name_override="PR_VLC_PASSWORD")
 
     @property
-    def url(self) -> str:
-        return self._get_value(key="URL", env_name_override="PR_TAUTULLI_URL")
+    def host(self) -> str:
+        return self._get_value(key="Host", env_name_override="PR_VLC_HOST")
+
+    @property
+    def port(self) -> str:
+        return self._get_value(key="Port", env_name_override="PR_VLC_PORT")
 
 
 class DiscordConfig(ConfigSection):
@@ -153,46 +157,6 @@ class DiscordConfig(ConfigSection):
     def owner_id(self) -> str:
         return self._get_value(key="OwnerID", env_name_override="PR_DISCORD_OWNER_ID")
 
-
-class TraktConfig(ConfigSection):
-    def __init__(self, data, pull_from_env: bool = True):
-        super().__init__(section_key="Trakt", data=data, pull_from_env=pull_from_env)
-
-    @property
-    def username(self) -> str:
-        return self._get_value(key="Username", env_name_override="PR_TRAKT_USERNAME")
-
-    @property
-    def client_id(self) -> str:
-        return self._get_value(key="ClientID", env_name_override="PR_TRAKT_CLIENT_ID")
-
-    @property
-    def client_secret(self) -> str:
-        return self._get_value(key="ClientSecret", env_name_override="PR_TRAKT_CLIENT_SECRET")
-
-    @property
-    def lists(self) -> Dict:
-        data = self._get_value(key="Lists", default=[], env_name_override="PR_TRAKT_LISTS")
-        if isinstance(data, str):
-            """
-            For environment variables, we need to convert one string to a list of strings first
-            Example: username1/listname1,username1/listname2,username3/listname3
-            """
-            data = data.split(",")
-        lists = {}
-        for entry in data:
-            username, list_name = entry.split("/")
-            if username not in lists:
-                lists[username] = []
-            lists[username].append(list_name)
-        """
-        Example:
-        {
-            "username1": ["listname1", "listname2"],
-            "username2": ["listname3"]
-        }
-        """
-        return lists
 
 
 class ExtrasConfig(ConfigSection):
@@ -224,10 +188,8 @@ class Config:
                 raise FileNotFoundError(f"Config file not found: {config_path}")
             self.pull_from_env = True
 
-        self.plex = PlexConfig(data=self.config, pull_from_env=self.pull_from_env)
-        self.tautulli = TautulliConfig(self.config, self.pull_from_env)
+        self.vlc = VlcConfig(self.config, self.pull_from_env)
         self.discord = DiscordConfig(self.config, self.pull_from_env)
-        self.trakt = TraktConfig(self.config, self.pull_from_env)
         self.extras = ExtrasConfig(self.config, self.pull_from_env)
         try:
             self.log_level = self.config['logLevel'].get() or "INFO"

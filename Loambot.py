@@ -1,10 +1,46 @@
+import os
+
 import discord
 from discord.ext import commands
 
 import vlc
+from televlc import televlc
 
 from modules import config_parser
 from modules.logs import *
+
+# VLC class for controlling the player through Python
+# class VLC:
+
+#     def __init__(self):
+#         self.Player = vlc.Instance('--loop')
+#         self.listPlayer = self.Player.media_list_player_new()
+
+#     def addPlaylist(self, playlist):
+#         mediaList = self.Player.media_list_new()
+#         path = r"D:\Shows\[Playlist]\\" + playlist + ".xspf"
+#         mediaList.add_media(self.Player.media_new(path))
+#         self.listPlayer.set_media_list(mediaList)
+
+#     def play(self):
+#         self.listPlayer.play()
+
+#     def next(self):
+#         self.listPlayer.next()
+
+#     def pause(self):
+#         self.listPlayer.pause()
+
+#     def previous(self):
+#         self.listPlayer.previous()
+
+#     def stop(self):
+#         self.listPlayer.stop()
+
+
+
+
+#############################################################################################################################
 
 # Parse config
 config = config_parser.Config(app_name="Loambot", config_path="config.yaml")
@@ -21,7 +57,13 @@ formatter = commands.HelpCommand(show_check_failure=False)
 
 info("Starting application...")
 
+PASSWORD = config.vlc.password
+HOST = config.vlc.host
+PORT = config.vlc.port
 
+# Initialize the vlc object
+vlc = televlc.VLC(PASSWORD, HOST, PORT)
+print(vlc.connect_to_telnet_interface())
 
 # on_ready event for setting up status after log in is successful
 # TODO: Write a function to update activity when playlist changes
@@ -31,6 +73,8 @@ async def on_ready():
     await bot.change_presence(status=discord.Status.idle,
                               activity=discord.Game(name=f'Now streaming! | {config.discord.bot_prefix}'))
     info(f'Successfully logged in and booted...!\n')
+
+
 
 
 
@@ -94,6 +138,7 @@ async def playMetalocalypse(message):
 async def playJack(message):
     await message.channel.send("NOW PLAYING SAMURAI JACK!")
 
+
 #Seinfeld
 @bot.command(aliases = ["seinfeld", "Seinfeld"], description = ": Plays Seinfeld seasons 1-9.")
 async def playSeinfeld(message):
@@ -104,6 +149,8 @@ async def playSeinfeld(message):
 async def playSpongebob(message):
     catEmoji = discord.utils.get(message.guild.emojis, name="threatencat")
     await message.channel.send("NOW PLAYING SPONGEBOB! " + str(catEmoji))
+
+
 
 
 ########################################################################################################################

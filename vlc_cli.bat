@@ -1,0 +1,1 @@
+vlc --extraintf --telnet --telnet-password dolphinsforsandy --telnet-host 127.0.0.1 --telnet-port 3000
