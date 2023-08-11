@@ -1,0 +1,1 @@
+vlc --extraintf --telnet --telnet-password dolphinsforsandy --telnet-port 9999
