@@ -99,10 +99,7 @@ class VLC():
 
 			try:
 				# Telnet connection
-				print(self.HOST)
-				print(self.PORT)
-				print(self.PASSWORD)
-				self.tn = telnetlib.Telnet(self.HOST, int(self.PORT))
+				self.tn = telnetlib.Telnet(self.HOST, self.PORT)
 
 				# Wait until the password is asked
 				message = "Password:"
@@ -145,26 +142,26 @@ class VLC():
 			return "[ERROR] The command provided is not a list" + str(command)
 
         # Create the command from the list
-        # glued_command = ""
-        # for i in range(len(command)):
-        #     if type(command[i]) == str:
-        #         glued_command += ' ' + command[i]
-        #     else:
-        #         return False
+		# glued_command = ""
+		# for i in range(len(command)):
+		# 	if type(command[i]) == str:
+		# 		glued_command += ' ' + command[i]
+		# 	else:
+		# 		return False
         # Join elements in list to a string where the items are separated by blanks:
 		glued_command = ' '.join(command)
-
 		try:
             # Wait until the console prompt appears(>)
-			message = ">"
-			message = message.encode("ascii")
-			self.tn.read_until(message)
+			# message = ""
+			# message = message.encode("ascii")
+			# self.tn.read_until(message)
 
             # Write command to telnet
             # Use glued_command when doing so
 			message = f"{glued_command}\n"
-			message = message.encode("ascii")
+			message = message.encode("utf-8")
 			self.tn.write(message)
+		
 		except:
 			return False
 

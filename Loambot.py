@@ -4,7 +4,8 @@ import discord
 from discord.ext import commands
 
 import vlc
-from televlc import televlc
+#from televlc import televlc
+from python_telnet_vlc import VLCTelnet
 
 from modules import config_parser
 from modules.logs import *
@@ -62,8 +63,11 @@ HOST = config.vlc.host
 PORT = config.vlc.port
 
 # Initialize the vlc object
-vlc = televlc.VLC(PASSWORD, HOST, PORT)
-print(vlc.connect_to_telnet_interface())
+# vlc = televlc.VLC(PASSWORD, HOST, PORT)
+# print(vlc.connect_to_telnet_interface())
+#vlc = VLCTelnet("localhost", "dolphinsforsandy", 9999)
+vlc = VLCTelnet(HOST, PASSWORD, PORT)    
+
 
 # on_ready event for setting up status after log in is successful
 # TODO: Write a function to update activity when playlist changes
@@ -137,6 +141,9 @@ async def playMetalocalypse(message):
 @bot.command(aliases = ["jack", "samuraijack"], description = ": Plays Samurai Jack seasons 1-5.")
 async def playJack(message):
     await message.channel.send("NOW PLAYING SAMURAI JACK!")
+    vlc.clear()
+    vlc.add("D:\Shows\[Playlist]\Jack.xspf")
+    vlc.play()
 
 
 #Seinfeld
@@ -149,6 +156,9 @@ async def playSeinfeld(message):
 async def playSpongebob(message):
     catEmoji = discord.utils.get(message.guild.emojis, name="threatencat")
     await message.channel.send("NOW PLAYING SPONGEBOB! " + str(catEmoji))
+    vlc.clear()
+    vlc.add("D:\Shows\[Playlist]\Spongebob.xspf")
+    vlc.play()
 
 
 
