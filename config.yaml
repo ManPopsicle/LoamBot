@@ -1,0 +1,30 @@
+appName: Loambot
+logLevel: WARN
+
+Discord:
+  BotToken: "MTEzOTAxNzAxODAyNTE4MTIwNA.GBsKf5.yr-_7Jr93UOZmU-aCa-_E90qEMizUDIPrh-USQ"
+  BotPrefix: "!"
+  OwnerID: "480837445747736590"  # Right-click on your profile picture -> "Copy ID"
+
+VLC:
+  Password: "pass"
+  Host: "127.0.0.1"
+  Port: 3000
+  Shuffle: False        # When bot first launches, determines if playlist should be randomized at start
+
+Libraries:
+  # Name each show exactly how the VLC playlist is named
+  Shows:
+    - boondocks
+    - chowder
+    - courage
+    - eds
+    - freshprince
+    - futurama
+    - koth
+    - metalocalypse
+    - jack
+    - seinfeld
+    - spongebob
+    - sunny
+    - zim
