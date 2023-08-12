@@ -10,6 +10,7 @@ from modules import config_parser
 from modules.logs import *
 
 from enum import Enum
+import random
 
 class showPlaylistToTitle(Enum):
     boondocks = "The Boondocks"
@@ -32,7 +33,8 @@ def iterShowEnum(listItem):
         if listItem == member.name:
             return member.value
     
-    return "Not found!"
+    return False
+
 #############################################################################################################################
 
 # Parse config
@@ -74,31 +76,23 @@ async def on_ready():
 
 
 
-######################################################################
-# COMMANDS FOR PLAYING A PLAYLIST
-# AVAILABLE PLAYLISTS:
-# - Boondocks
-# - Chowder
-# - Courage the Cowardly Dog
-# - Ed, Edd n' Eddy
-# - Fresh Prince of Bel-Air
-# - Futurama
-# - Invader Zim
-# - It's Always Sunny In Philadelphia
-# - King of the Hill
-# - Metalocalypse
-# - Samurai Jack
-# - Seinfeld
-# - Spongebob Squarepants
-#######################################################################
+
+############################################################################################################
+# General Commands
+############################################################################################################
+
+
 # Help command 
 @bot.command(aliases = ["help"], description = ": Chooses a playlist from list of shows based on user argument and plays it.")
 async def commands(message):
     await message.channel.send("""```
         Available commands: 
         !play <show_name> : Choose a show to play
-        !shuffle : Toggles the shuffle function. Next episode of the show will be randomized.
+        !shuffle : Toggles the shuffle function. Next episode of the show will be randomized
         !changechannel or !cc : Changes the channel! A different playlist begins playing
+        !next, !skip : Go to the next episode
+        !prev, !previous, !back, !goback : Go back to the previous episode
+        !cc, !changechannel, !remote, !surf : Randomly changes to another playlist
                                ```""")
   
 
@@ -136,16 +130,19 @@ async def playShow(message, arg):
 @bot.command(aliases = ["shuffle"], description = ": Chooses a playlist from list of shows based on user argument and plays it.")
 async def shufflePlaylist(message, arg = None):
     global vlcIsShuffled
+    # If user sets shuffle on
     if arg == "on":
         vlc.random(True)
         catEmoji = discord.utils.get(message.guild.emojis, name="catrave")
         await message.channel.send(str(catEmoji) + " Shuffle is now on. " + str(catEmoji))
         vlcIsShuffled = True 
+    # If user sets shuffle off
     elif arg == "off":
         vlc.random(False)
         catEmoji = discord.utils.get(message.guild.emojis, name="imdie")
         await message.channel.send(str(catEmoji) + " Shuffle is now off. " + str(catEmoji))
         vlcIsShuffled = False
+    # If user doesn't specify, then just toggle current status
     else:
         vlc.random()
         catEmoji = discord.utils.get(message.guild.emojis, name="doghittinit")
@@ -153,7 +150,65 @@ async def shufflePlaylist(message, arg = None):
         await message.channel.send(str(catEmoji) + " Shuffle toggled to " + str(vlcIsShuffled) + ". " + str(catEmoji))
 
 
+# Next command
+@bot.command(aliases = ["next", "skip"], description = ": Goes to the next episode of whatever playlist.")
+async def nextEpisode(message):
+    vlc.next()
+    emoji = discord.utils.get(message.guild.emojis, name="Sandyl12Angy")
+    await message.channel.send("This shit sucks! NEXT EPISODE. " + str(emoji) )
 
+
+# Previous command
+@bot.command(aliases = ["prev", "previous", "back", "goback"], description = ": Goes back to the previous episode of whatever playlist.")
+async def previousEpisode(message):
+    vlc.prev()
+    emoji = discord.utils.get(message.guild.emojis, name="SanDrill")
+    await message.channel.send("Rewind the tape! That shit was sick. " + str(emoji) )
+
+
+
+# Change Channel command
+@bot.command(aliases = ["cc", "changechannel", "remote", "surf"], description = ": Randomly selects a new playlist to play.")
+async def changeChannel(message):
+    # Find a random playlist
+    showList = list(showPlaylistToTitle)
+    randomSelect = str(random.choice(showList))[20:]
+
+    # Play the playlist
+    vlc.clear()
+    playlist = "D:\\Shows\\[Playlist]\\" + randomSelect + ".xspf"
+    vlc.add(playlist)
+    vlc.play()
+
+    # Send message
+    emoji = discord.utils.get(message.guild.emojis, name="spaghettishake")
+    await message.channel.send("Gimme the remote. I'm changing the channel. " + str(emoji) )
+
+    # Change bot's status to reflect new playlist
+    await bot.change_presence(status=discord.Status.idle,
+                            activity=discord.Game(name=f'Now streaming ' + iterShowEnum(randomSelect)))
+
+
+
+
+
+######################################################################
+# COMMANDS FOR PLAYING A PLAYLIST
+# AVAILABLE PLAYLISTS:
+# - Boondocks
+# - Chowder
+# - Courage the Cowardly Dog
+# - Ed, Edd n' Eddy
+# - Fresh Prince of Bel-Air
+# - Futurama
+# - Invader Zim
+# - It's Always Sunny In Philadelphia
+# - King of the Hill
+# - Metalocalypse
+# - Samurai Jack
+# - Seinfeld
+# - Spongebob Squarepants
+#######################################################################
 
 #Boondocks
 @bot.command(aliases = ["boondocks", "Boondocks", "person"], description = ": Plays The Boondocks seasons 1-4.")
