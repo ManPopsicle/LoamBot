@@ -23,7 +23,7 @@ sdist/
 var/
 wheels/
 pip-wheel-metadata/
-share/python-wheels/
+share/python-wheels/1
 *.egg-info/
 .installed.cfg
 *.egg
@@ -143,4 +143,3 @@ cython_debug/
 # Custom
 *.priv
 credentials.py
-/config.yaml
