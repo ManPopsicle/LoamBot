@@ -11,6 +11,7 @@ from modules.logs import *
 
 from enum import Enum
 import random
+import time
 
 class showPlaylistToTitle(Enum):
     boondocks = "The Boondocks"
@@ -92,6 +93,7 @@ async def commands(message):
         !cc, !changechannel, !remote, !surf : Randomly changes to another playlist
         !next, !skip : Go to the next episode
         !prev, !previous, !back, !goback : Go back to the previous episode
+        !list : Shows the available shows
                                ```""")
   
 
@@ -103,7 +105,7 @@ async def playShow(message, arg):
     if arg in config.libraries.shows_library:
         # Playlist found. Locate it in the file directory and play it
         vlc.clear()
-        playlist = "D:\\Shows\\[Playlist]\\" + arg + ".xspf"
+        playlist = "D:\Shows\[Playlists]\\" + arg + ".xspf"
         vlc.add(playlist)
         vlc.play()
         # Announce it
@@ -115,7 +117,7 @@ async def playShow(message, arg):
     # No playlist found; play the master playlist
     else:
         vlc.clear()
-        playlist = "D:\\Shows\\[Playlist]\\all.xspf"
+        playlist = "D:\Shows\[Playlists]\\all.xspf"
         vlc.add(playlist)
         vlc.play()
         # Announce it
@@ -165,6 +167,37 @@ async def previousEpisode(message):
     await message.channel.send("Rewind the tape! That shit was sick. " + str(emoji) )
 
 
+# Pause command
+@bot.command(aliases = ["pause"], description = ": Pauses current episode.")
+async def pauseEpisode(message):
+    vlc.pause()
+    emoji = discord.utils.get(message.guild.emojis, name="SanDrill")
+    await message.channel.send("Hang on, gotta take a leak. " + str(emoji) )
+
+    
+# Resume command
+@bot.command(aliases = ["resume"], description = ": Resumes current episode.")
+async def resumeEpisode(message):
+    vlc.play()
+    emoji = discord.utils.get(message.guild.emojis, name="SanDrill")
+    await message.channel.send("Alright, I closed/opened the window. " + str(emoji) )
+
+
+# seek command
+@bot.command(aliases = ["seek"], description = ": Goes to a certain timestamp in the episode.")
+async def seekTime(message, arg):
+    try:
+        # Convert argument to seconds
+        timeObj = time.strptime(arg, '%M:%S')
+        totalSecs = timeObj.tm_sec + timeObj.tm_min*60 + timeObj.tm_hour*3600
+
+        vlc.seek(totalSecs)
+        emoji = discord.utils.get(message.guild.emojis, name="wigglyloam")
+        await message.channel.send("Moving to " + arg + " timestamp (hopefully)! "+ str(emoji) )
+    except:
+        emoji = discord.utils.get(message.guild.emojis, name="SandyChoppa")
+        await message.channel.send("I don't wanna sanitize your timestamp. Please make sure it's in MM:SS. That, or something else went wrong, like the episode isn't that long or something. " + str(emoji) )
+
 
 # Change Channel command
 @bot.command(aliases = ["cc", "changechannel", "remote", "surf"], description = ": Randomly selects a new playlist to play.")
@@ -175,7 +208,7 @@ async def changeChannel(message):
 
     # Play the playlist
     vlc.clear()
-    playlist = "D:\\Shows\\[Playlist]\\" + randomSelect + ".xspf"
+    playlist = "D:\Shows\[Playlists]\\" + randomSelect + ".xspf"
     vlc.add(playlist)
     vlc.play()
 
@@ -229,9 +262,10 @@ async def listChannels(message):
 #Boondocks
 @bot.command(aliases = ["boondocks", "Boondocks", "person"], description = ": Plays The Boondocks seasons 1-4.")
 async def playBoondocks(message):
-    await message.channel.send("NOW PLAYING THE BOONDOCKS!")
+    catEmoji = discord.utils.get(message.guild.emojis, name="insanecat")
+    await message.channel.send("NOW PLAYING THE BOONDOCKS! " + str(catEmoji))
     vlc.clear()
-    vlc.add("D:\Shows\[Playlist]\\boondocks.xspf")
+    vlc.add("D:\Shows\[Playlists]\\boondocks.xspf")
     vlc.play()
     
     # Change bot's status to reflect new playlist
@@ -242,9 +276,10 @@ async def playBoondocks(message):
 #Chowder
 @bot.command(aliases = ["chowder"], description = ": Plays Chowder seasons 1-3.")
 async def playChowder(message):
-    await message.channel.send("NOW PLAYING CHOWDER!")
+    catEmoji = discord.utils.get(message.guild.emojis, name="insanecat")
+    await message.channel.send("NOW PLAYING CHOWDER! " + str(catEmoji))
     vlc.clear()
-    vlc.add("D:\Shows\[Playlist]\chowder.xspf")
+    vlc.add("D:\Shows\[Playlists]\chowder.xspf")
     vlc.play()
     
     # Change bot's status to reflect new playlist
@@ -255,9 +290,10 @@ async def playChowder(message):
 #Courage
 @bot.command(aliases = ["courage", "Courage", "couragethecowardlydog", "stupiddog"], description = ": Plays Courage the Cowardly Dog seasons 1-4.")
 async def playCourage(message):
-    await message.channel.send("NOW PLAYING COURAGE THE COWARDLY DOG!")
+    catEmoji = discord.utils.get(message.guild.emojis, name="insanecat")
+    await message.channel.send("NOW PLAYING COURAGE THE COWARDLY DOG! " + str(catEmoji))
     vlc.clear()
-    vlc.add("D:\Shows\[Playlist]\courage.xspf")
+    vlc.add("D:\Shows\[Playlists]\courage.xspf")
     vlc.play()
     
     # Change bot's status to reflect new playlist
@@ -268,9 +304,10 @@ async def playCourage(message):
 #Eds
 @bot.command(aliases = ["ed", "eds", "ededdeddy", "canadians"], description = ": Plays Ed, Edd n' Eddy seasons 1-6.")
 async def playEds(message):
-    await message.channel.send("NOW PLAYING ED, EDD N' EDDY!")
+    catEmoji = discord.utils.get(message.guild.emojis, name="insanecat")
+    await message.channel.send("NOW PLAYING ED, EDD N' EDDY! " + str(catEmoji))
     vlc.clear()
-    vlc.add("D:\Shows\[Playlist]\eds.xspf")
+    vlc.add("D:\Shows\[Playlists]\eds.xspf")
     vlc.play()
     
     # Change bot's status to reflect new playlist
@@ -281,9 +318,10 @@ async def playEds(message):
 #Fresh Prince
 @bot.command(aliases = ["will", "belair", "freshprince", "freshprinceofbelair"], description = ": Plays Fresh Prince of Bel-Air seasons 1-6.")
 async def playFreshPrince(message):
-    await message.channel.send("NOW PLAYING FRESH PRINCE OF BEL-AIR!")
+    catEmoji = discord.utils.get(message.guild.emojis, name="insanecat")
+    await message.channel.send("NOW PLAYING FRESH PRINCE OF BEL-AIR! " + str(catEmoji))
     vlc.clear()
-    vlc.add("D:\Shows\[Playlist]\\freshprince.xspf")
+    vlc.add("D:\Shows\[Playlists]\\freshprince.xspf")
     vlc.play()
     
     # Change bot's status to reflect new playlist
@@ -294,9 +332,10 @@ async def playFreshPrince(message):
 #Futurama
 @bot.command(aliases = ["futurama", "Futurama"], description = ": Plays Futurama seasons 1-7.")
 async def playFuturama(message):
-    await message.channel.send("NOW PLAYING FUTURAMA!")
+    catEmoji = discord.utils.get(message.guild.emojis, name="insanecat")
+    await message.channel.send("NOW PLAYING FUTURAMA! " + str(catEmoji))
     vlc.clear()
-    vlc.add("D:\Shows\[Playlist]\\futurama.xspf")
+    vlc.add("D:\Shows\[Playlists]\\futurama.xspf")
     vlc.play()
     
     # Change bot's status to reflect new playlist
@@ -307,9 +346,10 @@ async def playFuturama(message):
 #Always Sunny
 @bot.command(aliases = ["alwayssunny", "philly"], description = ": Plays It's Always Sunny In Philadelphia seasons 1-13.")
 async def playPhilly(message):
-    await message.channel.send("NOW PLAYING IT'S ALWAYS SUNNY IN PHILADELPHIA!")
+    catEmoji = discord.utils.get(message.guild.emojis, name="insanecat")
+    await message.channel.send("NOW PLAYING IT'S ALWAYS SUNNY IN PHILADELPHIA! " + str(catEmoji))
     vlc.clear()
-    vlc.add("D:\Shows\[Playlist]\sunny.xspf")
+    vlc.add("D:\Shows\[Playlists]\sunny.xspf")
     vlc.play()
     
     # Change bot's status to reflect new playlist
@@ -320,9 +360,10 @@ async def playPhilly(message):
 #Koth
 @bot.command(aliases = ["kingofthehill", "koth"], description = ": Plays King of the Hill seasons 1-13.")
 async def playKoth(message):
-    await message.channel.send("NOW PLAYING KING OF THE HILL!")
+    catEmoji = discord.utils.get(message.guild.emojis, name="insanecat")
+    await message.channel.send("NOW PLAYING KING OF THE HILL! " + str(catEmoji))
     vlc.clear()
-    vlc.add("D:\Shows\[Playlist]\koth.xspf")
+    vlc.add("D:\Shows\[Playlists]\koth.xspf")
     vlc.play()
     
     # Change bot's status to reflect new playlist
@@ -333,9 +374,10 @@ async def playKoth(message):
 #Metalocalypse
 @bot.command(aliases = ["metalocalypse", "deathklok", "Metalocalypse", "Deathklok"], description = ": Plays Metalocalypse seasons 1-4.")
 async def playMetalocalypse(message):
-    await message.channel.send("NOW PLAYING METALOCALYPSE!")
+    catEmoji = discord.utils.get(message.guild.emojis, name="insanecat")
+    await message.channel.send("NOW PLAYING METALOCALYPSE! " + str(catEmoji))
     vlc.clear()
-    vlc.add("D:\Shows\[Playlist]\metalocalypse.xspf")
+    vlc.add("D:\Shows\[Playlists]\metalocalypse.xspf")
     vlc.play()
 
     # Change bot's status to reflect new playlist
@@ -346,9 +388,10 @@ async def playMetalocalypse(message):
 #Samurai Jack
 @bot.command(aliases = ["jack", "samuraijack"], description = ": Plays Samurai Jack seasons 1-5.")
 async def playJack(message):
-    await message.channel.send("NOW PLAYING SAMURAI JACK!")
+    catEmoji = discord.utils.get(message.guild.emojis, name="insanecat")
+    await message.channel.send("NOW PLAYING SAMURAI JACK! " + str(catEmoji))
     vlc.clear()
-    vlc.add("D:\Shows\[Playlist]\jack.xspf")
+    vlc.add("D:\Shows\[Playlists]\jack.xspf")
     vlc.play()
 
     # Change bot's status to reflect new playlist
@@ -360,9 +403,10 @@ async def playJack(message):
 #Seinfeld
 @bot.command(aliases = ["seinfeld", "Seinfeld"], description = ": Plays Seinfeld seasons 1-9.")
 async def playSeinfeld(message):
-    await message.channel.send("NOW PLAYING SEINFELD!")
+    catEmoji = discord.utils.get(message.guild.emojis, name="insanecat")
+    await message.channel.send("NOW PLAYING SEINFELD! " + str(catEmoji))
     vlc.clear()
-    vlc.add("D:\Shows\[Playlist]\seinfeld.xspf")
+    vlc.add("D:\Shows\[Playlists]\seinfeld.xspf")
     vlc.play()
 
     # Change bot's status to reflect new playlist
@@ -373,10 +417,10 @@ async def playSeinfeld(message):
 #Spongebob
 @bot.command(aliases = ["spongebob", "Spongebob", "Spongebob Squarepants"], description = ": Plays Spongebob Squarepants seasons 1-10.")
 async def playSpongebob(message):
-    catEmoji = discord.utils.get(message.guild.emojis, name="threatencat")
+    catEmoji = discord.utils.get(message.guild.emojis, name="insanecat")
     await message.channel.send("NOW PLAYING SPONGEBOB! " + str(catEmoji))
     vlc.clear()
-    vlc.add("D:\Shows\[Playlist]\spongebob.xspf")
+    vlc.add("D:\Shows\[Playlists]\spongebob.xspf")
     vlc.play()
     
     # Change bot's status to reflect new playlist
@@ -384,10 +428,41 @@ async def playSpongebob(message):
                               activity=discord.Game(name=f'Now streaming Spongebob!'))
 
 
+#Zim
+@bot.command(aliases = ["zim"], description = ": Plays Invader Zim.")
+async def playZim(message):
+    catEmoji = discord.utils.get(message.guild.emojis, name="insanecat")
+    await message.channel.send("NOW PLAYING ZIM! " + str(catEmoji))
+    vlc.clear()
+    vlc.add("D:\Shows\[Playlists]\zim.xspf")
+    vlc.play()
+    
+    # Change bot's status to reflect new playlist
+    await bot.change_presence(status=discord.Status.idle,
+                              activity=discord.Game(name=f'Now streaming Invader Zim!'))
 
 
 ########################################################################################################################
+# Other stupid commands
+########################################################################################################################
 
+# Maverick command
+@bot.command(aliases = ["maverick"], description = ": Megerman.")
+async def maverickPosting(message):
+    vlc.play()
+    emoji = discord.utils.get(message.guild.emojis, name="aaaaaaaaaaaaaaaaaaa")
+    await message.channel.send( str(emoji) )
+
+# Die command
+@bot.command(aliases = ["die"], description = ": die")
+async def dieOomfie(message, arg):
+    emoji = discord.utils.get(message.guild.emojis, name="gst")
+    await message.channel.send( str(emoji) )
+    vlc.pause()
+    time.sleep(3)
+    emoji = discord.utils.get(message.guild.emojis, name="cool-1")
+    await message.channel.send( "Nah, just fucking with you." + str(emoji))
+    vlc.play()
 
 # Begin running
 if __name__ == '__main__':
