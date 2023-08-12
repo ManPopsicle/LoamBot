@@ -49,80 +49,26 @@ class ConfigSection:
             return default
 
 
-class PlexConfig(ConfigSection):
+class LibrariesConfig(ConfigSection):
     def __init__(self, data, pull_from_env: bool = True):
-        super().__init__(section_key="Plex", data=data, pull_from_env=pull_from_env)
+        super().__init__(section_key="Libraries", data=data, pull_from_env=pull_from_env)
+
 
     @property
-    def url(self) -> str:
-        return self._get_value(key="URL", env_name_override="PR_PLEX_URL")
-
-    @property
-    def token(self) -> str:
-        return self._get_value(key="Token", env_name_override="PR_PLEX_TOKEN")
-
-    @property
-    def server_name(self) -> str:
-        return self._get_value(key="ServerName", env_name_override="PR_PLEX_SERVER_NAME")
-
-    @property
-    def use_plex_link(self) -> bool:
-        return self._get_value(key="UsePlexLink", default=True, env_name_override="PR_USE_PLEX_LINK")
-
-    @property
-    def _libraries_section(self):
-        return self._get_subsection(key="Libraries")
-
-    @property
-    def _movies_libraries(self) -> List[str]:
-        data = self._libraries_section._get_value(key="Movies", default=[],
-                                                  env_name_override="PR_PLEX_MOVIES_LIBRARIES")
+    def movie_library(self) -> List[str]:
+        data = self._get_value(key="Movies", default=[],
+                                                  env_name_override="MOVIES_LIBRARY")
         if isinstance(data, str):
             return data.split(",")  # Dealing with a comma separated list in an environment variable
         return data
 
     @property
-    def _shows_libraries(self) -> List[str]:
-        data = self._libraries_section._get_value(key="Shows", default=[],
-                                                  env_name_override="PR_PLEX_SHOWS_LIBRARIES")
+    def shows_library(self) -> List[str]:
+        data = self._get_value(key="Shows", default=[],
+                                                  env_name_override="SHOWS_LIBRARY")
         if isinstance(data, str):
             return data.split(",")  # Dealing with a comma separated list in an environment variable
         return data
-
-    @property
-    def _music_libraries(self) -> List[str]:
-        data = self._libraries_section._get_value(key="Music", default=[],
-                                                  env_name_override="PR_PLEX_MUSIC_LIBRARIES")
-        if isinstance(data, str):
-            return data.split(",")  # Dealing with a comma separated list in an environment variable
-        return data
-
-    @property
-    def _4K_libraries(self) -> List[str]:
-        data = self._libraries_section._get_value(key="4K", default=[],
-                                                  env_name_override="PR_PLEX_4K_LIBRARIES")
-        if isinstance(data, str):
-            return data.split(",")  # Dealing with a comma separated list in an environment variable
-        return data
-
-    @property
-    def _anime_libraries(self) -> List[str]:
-        data = self._libraries_section._get_value(key="Anime", default=[],
-                                                  env_name_override="PR_PLEX_ANIME_LIBRARIES")
-        if isinstance(data, str):
-            return data.split(",")  # Dealing with a comma separated list in an environment variable
-        return data
-
-    @property
-    def libraries(self):
-        return {
-            "movie": self._movies_libraries,
-            "show": self._shows_libraries,
-            "music": self._music_libraries,
-            "4k": self._4K_libraries,
-            "anime": self._anime_libraries,
-        }
-
 
 class VlcConfig(ConfigSection):
     def __init__(self, data, pull_from_env: bool = True):
@@ -130,15 +76,19 @@ class VlcConfig(ConfigSection):
 
     @property
     def password(self) -> str:
-        return self._get_value(key="Password", env_name_override="PR_VLC_PASSWORD")
+        return self._get_value(key="Password", env_name_override="VLC_PASSWORD")
 
     @property
     def host(self) -> str:
-        return self._get_value(key="Host", env_name_override="PR_VLC_HOST")
+        return self._get_value(key="Host", env_name_override="VLC_HOST")
 
     @property
     def port(self) -> str:
-        return self._get_value(key="Port", env_name_override="PR_VLC_PORT")
+        return self._get_value(key="Port", env_name_override="VLC_PORT")
+    
+    @property
+    def shuffle(self) -> bool:
+        return self._get_value(key="Shuffle", env_name_override="VLC_SHUFFLE")
 
 
 class DiscordConfig(ConfigSection):
@@ -159,23 +109,6 @@ class DiscordConfig(ConfigSection):
 
 
 
-class ExtrasConfig(ConfigSection):
-    def __init__(self, data, pull_from_env: bool = True):
-        super().__init__(section_key="Extras", data=data, pull_from_env=pull_from_env)
-
-    @property
-    def allow_analytics(self) -> bool:
-        value = self._get_value(key="Analytics", default=True,
-                                env_name_override="PR_ALLOW_ANALYTICS")
-        return _extract_bool(value)
-
-    @property
-    def suppress_logs(self) -> bool:
-        value = self._get_value(key="SuppressLogs", default=False,
-                                env_name_override="PR_SUPPRESS_LOGS")
-        return _extract_bool(value)
-
-
 class Config:
     def __init__(self, app_name: str, config_path: str, fallback_to_env: bool = True):
         self.config = confuse.Configuration(app_name)
@@ -190,7 +123,7 @@ class Config:
 
         self.vlc = VlcConfig(self.config, self.pull_from_env)
         self.discord = DiscordConfig(self.config, self.pull_from_env)
-        self.extras = ExtrasConfig(self.config, self.pull_from_env)
+        self.libraries = LibrariesConfig(self.config, self.pull_from_env)
         try:
             self.log_level = self.config['logLevel'].get() or "INFO"
         except confuse.NotFoundError:
