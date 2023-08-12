@@ -89,10 +89,9 @@ async def commands(message):
         Available commands: 
         !play <show_name> : Choose a show to play
         !shuffle : Toggles the shuffle function. Next episode of the show will be randomized
-        !changechannel or !cc : Changes the channel! A different playlist begins playing
+        !cc, !changechannel, !remote, !surf : Randomly changes to another playlist
         !next, !skip : Go to the next episode
         !prev, !previous, !back, !goback : Go back to the previous episode
-        !cc, !changechannel, !remote, !surf : Randomly changes to another playlist
                                ```""")
   
 
@@ -189,8 +188,25 @@ async def changeChannel(message):
                             activity=discord.Game(name=f'Now streaming ' + iterShowEnum(randomSelect)))
 
 
-
-
+# List shows command
+@bot.command(aliases = ["tvguide", "list"], description = ": Randomly selects a new playlist to play.")
+async def listChannels(message):
+    await message.channel.send("""```
+    If you wish to change to a certain show, please type !play <show> using one of the following:
+    - boondocks
+    - chowder
+    - courage
+    - eds
+    - freshprince
+    - futurama
+    - koth
+    - metalocalypse
+    - jack
+    - seinfeld
+    - spongebob
+    - sunny
+    - zim
+         ```""")
 
 ######################################################################
 # COMMANDS FOR PLAYING A PLAYLIST
@@ -214,6 +230,9 @@ async def changeChannel(message):
 @bot.command(aliases = ["boondocks", "Boondocks", "person"], description = ": Plays The Boondocks seasons 1-4.")
 async def playBoondocks(message):
     await message.channel.send("NOW PLAYING THE BOONDOCKS!")
+    vlc.clear()
+    vlc.add("D:\Shows\[Playlist]\\boondocks.xspf")
+    vlc.play()
     
     # Change bot's status to reflect new playlist
     await bot.change_presence(status=discord.Status.idle,
@@ -224,6 +243,9 @@ async def playBoondocks(message):
 @bot.command(aliases = ["chowder"], description = ": Plays Chowder seasons 1-3.")
 async def playChowder(message):
     await message.channel.send("NOW PLAYING CHOWDER!")
+    vlc.clear()
+    vlc.add("D:\Shows\[Playlist]\chowder.xspf")
+    vlc.play()
     
     # Change bot's status to reflect new playlist
     await bot.change_presence(status=discord.Status.idle,
@@ -234,6 +256,9 @@ async def playChowder(message):
 @bot.command(aliases = ["courage", "Courage", "couragethecowardlydog", "stupiddog"], description = ": Plays Courage the Cowardly Dog seasons 1-4.")
 async def playCourage(message):
     await message.channel.send("NOW PLAYING COURAGE THE COWARDLY DOG!")
+    vlc.clear()
+    vlc.add("D:\Shows\[Playlist]\courage.xspf")
+    vlc.play()
     
     # Change bot's status to reflect new playlist
     await bot.change_presence(status=discord.Status.idle,
@@ -244,6 +269,9 @@ async def playCourage(message):
 @bot.command(aliases = ["ed", "eds", "ededdeddy", "canadians"], description = ": Plays Ed, Edd n' Eddy seasons 1-6.")
 async def playEds(message):
     await message.channel.send("NOW PLAYING ED, EDD N' EDDY!")
+    vlc.clear()
+    vlc.add("D:\Shows\[Playlist]\eds.xspf")
+    vlc.play()
     
     # Change bot's status to reflect new playlist
     await bot.change_presence(status=discord.Status.idle,
@@ -254,6 +282,9 @@ async def playEds(message):
 @bot.command(aliases = ["will", "belair", "freshprince", "freshprinceofbelair"], description = ": Plays Fresh Prince of Bel-Air seasons 1-6.")
 async def playFreshPrince(message):
     await message.channel.send("NOW PLAYING FRESH PRINCE OF BEL-AIR!")
+    vlc.clear()
+    vlc.add("D:\Shows\[Playlist]\\freshprince.xspf")
+    vlc.play()
     
     # Change bot's status to reflect new playlist
     await bot.change_presence(status=discord.Status.idle,
@@ -264,6 +295,9 @@ async def playFreshPrince(message):
 @bot.command(aliases = ["futurama", "Futurama"], description = ": Plays Futurama seasons 1-7.")
 async def playFuturama(message):
     await message.channel.send("NOW PLAYING FUTURAMA!")
+    vlc.clear()
+    vlc.add("D:\Shows\[Playlist]\\futurama.xspf")
+    vlc.play()
     
     # Change bot's status to reflect new playlist
     await bot.change_presence(status=discord.Status.idle,
@@ -274,6 +308,9 @@ async def playFuturama(message):
 @bot.command(aliases = ["alwayssunny", "philly"], description = ": Plays It's Always Sunny In Philadelphia seasons 1-13.")
 async def playPhilly(message):
     await message.channel.send("NOW PLAYING IT'S ALWAYS SUNNY IN PHILADELPHIA!")
+    vlc.clear()
+    vlc.add("D:\Shows\[Playlist]\sunny.xspf")
+    vlc.play()
     
     # Change bot's status to reflect new playlist
     await bot.change_presence(status=discord.Status.idle,
@@ -284,6 +321,9 @@ async def playPhilly(message):
 @bot.command(aliases = ["kingofthehill", "koth"], description = ": Plays King of the Hill seasons 1-13.")
 async def playKoth(message):
     await message.channel.send("NOW PLAYING KING OF THE HILL!")
+    vlc.clear()
+    vlc.add("D:\Shows\[Playlist]\koth.xspf")
+    vlc.play()
     
     # Change bot's status to reflect new playlist
     await bot.change_presence(status=discord.Status.idle,
@@ -294,6 +334,9 @@ async def playKoth(message):
 @bot.command(aliases = ["metalocalypse", "deathklok", "Metalocalypse", "Deathklok"], description = ": Plays Metalocalypse seasons 1-4.")
 async def playMetalocalypse(message):
     await message.channel.send("NOW PLAYING METALOCALYPSE!")
+    vlc.clear()
+    vlc.add("D:\Shows\[Playlist]\metalocalypse.xspf")
+    vlc.play()
 
     # Change bot's status to reflect new playlist
     await bot.change_presence(status=discord.Status.idle,
@@ -305,18 +348,22 @@ async def playMetalocalypse(message):
 async def playJack(message):
     await message.channel.send("NOW PLAYING SAMURAI JACK!")
     vlc.clear()
-    vlc.add("D:\Shows\[Playlist]\Jack.xspf")
+    vlc.add("D:\Shows\[Playlist]\jack.xspf")
     vlc.play()
 
     # Change bot's status to reflect new playlist
     await bot.change_presence(status=discord.Status.idle,
                               activity=discord.Game(name=f'Now streaming Samurai Jack!'))
+    
 
 
 #Seinfeld
 @bot.command(aliases = ["seinfeld", "Seinfeld"], description = ": Plays Seinfeld seasons 1-9.")
 async def playSeinfeld(message):
     await message.channel.send("NOW PLAYING SEINFELD!")
+    vlc.clear()
+    vlc.add("D:\Shows\[Playlist]\seinfeld.xspf")
+    vlc.play()
 
     # Change bot's status to reflect new playlist
     await bot.change_presence(status=discord.Status.idle,
@@ -329,7 +376,7 @@ async def playSpongebob(message):
     catEmoji = discord.utils.get(message.guild.emojis, name="threatencat")
     await message.channel.send("NOW PLAYING SPONGEBOB! " + str(catEmoji))
     vlc.clear()
-    vlc.add("D:\Shows\[Playlist]\Spongebob.xspf")
+    vlc.add("D:\Shows\[Playlist]\spongebob.xspf")
     vlc.play()
     
     # Change bot's status to reflect new playlist
