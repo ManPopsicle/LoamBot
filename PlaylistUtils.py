@@ -13,6 +13,7 @@ import time
 class showPlaylistToTitle(Enum):
     adventuretime = "Adventure Time"
     amphibia = "Amphibia"
+    bigcitygreens = "Big City Greens"
     boondocks = "The Boondocks"
     chowder = "Chowder"
     courage = "Courage the Cowardly Dog"
@@ -22,6 +23,7 @@ class showPlaylistToTitle(Enum):
     futurama = "Futurama"
     insidejob = "Inside Job"
     koth = "King of the Hill"
+    medabots = "Medabots"
     metalocalypse = "Metalocalypse"
     regularshow = "The Regular Show"
     renstimpy = "The Ren and Stimpy Show"
@@ -30,6 +32,8 @@ class showPlaylistToTitle(Enum):
     siflolly = "Sifl and Olly"
     spongebob = "Spongebob Squarepants"
     sunny = "It's Always Sunny In Philadelphia"
+    transformersarm = "Transformers: Armada"
+    transformersrid = "Transformers: Robots In Disguise"
     zim = "Invader Zim"
 
 # Returns a properly formatted version of a show name
