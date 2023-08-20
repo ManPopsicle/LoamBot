@@ -233,16 +233,22 @@ async def playAmphibia(message):
     playShow(message, "amphibia") 
 
 
-#Boondocks
-@bot.command(aliases = ["boondocks", "Boondocks", "person"], description = ": Plays The Boondocks seasons 1-4.")
-async def playBoondocks(message):
-    playShow(message, "boondocks") 
-    
+#Big City Greens
+@bot.command(aliases = ["bigcitygreens"], description = ": Plays Big City Greens seasons 1-3.")
+async def playBigCityGreens(message):
+    playShow(message, "bigcitygreens") 
+
 
 #Beavis and Butthead
 @bot.command(aliases = ["beavisbutthead", "score"], description = ": Plays Beavis and Butthead seasons 1-7.")
 async def playBeavisAndButthead(message):
     playShow(message, "beavisbutthead") 
+
+    
+#Boondocks
+@bot.command(aliases = ["boondocks", "Boondocks", "person"], description = ": Plays The Boondocks seasons 1-4.")
+async def playBoondocks(message):
+    playShow(message, "boondocks") 
 
 
 #Celebrity Deathmatch
@@ -269,7 +275,7 @@ async def playDodgers(message):
     playShow(message, "duckdodgers") 
 
 
-#Eds
+#Ed, Edd n' Eddy
 @bot.command(aliases = ["ed", "eds", "ededdeddy", "canadians"], description = ": Plays Ed, Edd n' Eddy seasons 1-6.")
 async def playEds(message):
     playShow(message, "eds") 
@@ -293,16 +299,22 @@ async def playInsideJob(message):
     playShow(message, "insidejob") 
 
 
-#Always Sunny
+#It's Always Sunny in Philadelphia
 @bot.command(aliases = ["alwayssunny", "philly", "sunny"], description = ": Plays It's Always Sunny In Philadelphia seasons 1-13.")
 async def playPhilly(message):
     playShow(message, "sunny") 
 
 
-#Koth
+#King of the Hill
 @bot.command(aliases = ["kingofthehill", "koth"], description = ": Plays King of the Hill seasons 1-13.")
 async def playKoth(message):
     playShow(message, "koth") 
+
+
+#Medabots
+@bot.command(aliases = ["medabots"], description = ": Plays Medabots seasons 1-2")
+async def playMedabots(message):
+    playShow(message, "medabots") 
 
 
 #Metalocalypse
@@ -340,10 +352,23 @@ async def playSeinfeld(message):
 async def playSiflOlly(message):
     playShow(message, "siflolly") 
 
-#Spongebob
+
+#Spongebob Squarepants
 @bot.command(aliases = ["spongebob", "Spongebob", "Spongebob Squarepants"], description = ": Plays Spongebob Squarepants seasons 1-10.")
 async def playSpongebob(message):
     playShow(message, "spongebob") 
+
+
+#Transformers Armada
+@bot.command(aliases = ["transformersarm", "armada"], description = ": Plays Transformers Armada")
+async def playTransArm(message):
+    playShow(message, "transformersarm") 
+
+
+#Sifl and Olly
+@bot.command(aliases = ["transformersrid", "rid"], description = ": Plays Transformers Robots in Disguise")
+async def playTransRid(message):
+    playShow(message, "transformersrid") 
 
 
 #Zim

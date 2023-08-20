@@ -2,9 +2,9 @@ appName: Loambot
 logLevel: WARN
 
 Discord:
-  BotToken: "MTEzOTAxNzAxODAyNTE4MTIwNA.GBsKf5.yr-_7Jr93UOZmU-aCa-_E90qEMizUDIPrh-USQ"
+  BotToken: ""
   BotPrefix: "!"
-  OwnerID: "480837445747736590"  # Right-click on your profile picture -> "Copy ID"
+  OwnerID: ""  # Right-click on your profile picture -> "Copy ID"
 
 VLC:
   Password: "pass"
@@ -15,16 +15,30 @@ VLC:
 Libraries:
   # Name each show exactly how the VLC playlist is named
   Shows:
+    - adventuretime
+    - amphibia
+    - beavisbutthead
+    - bigcitygreens
     - boondocks
+    - cdm
     - chowder
     - courage
+    - duckdodgers
     - eds
     - freshprince
     - futurama
+    - insidejob
+    - invincible
     - koth
+    - medabots
     - metalocalypse
+    - regularshow
+    - renstimpy
     - jack
     - seinfeld
+    - siflolly
     - spongebob
     - sunny
+    - transformersarm
+    - transformersrid
     - zim
