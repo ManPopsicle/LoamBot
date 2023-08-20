@@ -128,7 +128,7 @@ class PaginationView(discord.ui.View):
     def getCurrentPageData(self):
         until_item = self.CurrentPage * self.Seperator
         from_item = until_item - self.Seperator
-        if not self.CurrentPage == 1:
+        if self.CurrentPage == 1:
             from_item = 0
             until_item = self.Seperator
         if self.CurrentPage == int(len(self.data) / self.Seperator) + 1:
