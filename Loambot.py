@@ -332,7 +332,7 @@ async def playRenStimpy(message):
 #Seinfeld
 @bot.command(aliases = ["seinfeld", "Seinfeld"], description = ": Plays Seinfeld seasons 1-9.")
 async def playSeinfeld(message):
-    playShow(message, "seinfeld") 
+    playShow(message, "seinfeld")
 
 
 #Sifl and Olly
@@ -426,6 +426,7 @@ async def playHotChickHeaven(message):
                               activity=discord.Game(name=f'Hot Chick Heaven!'))
 
 ########################################################################################################################
+
 
 # Begin running
 if __name__ == '__main__':
