@@ -383,28 +383,38 @@ async def playZim(message):
 ########################################################################################################################
 
 
-#Play stream command
 
+
+# Secret command generator
+@bot.command(aliases = ["secret"], description = ": Secret roll!")
+async def secretCommandGenerator(message):
+    await message.channel.send(PlaylistUtils.secretGenerate())
+
+
+
+# Play stream command
 @bot.command(aliases = ["gamescom"], description = ": vidya.")
-async def playGamescom(message):
+async def gamescomTime(message):
+    catEmoji = discord.utils.get(message.guild.emojis, name="videogames")
+    await message.channel.send(str(catEmoji) + " Video games suck " + str(catEmoji))
     vlc.clear()
-    vlc.add("https://video-weaver.jfk06.hls.ttvnw.net/v1/playlist/CqEG2qmacaXyamVOnkPf_vyc2gftNBljkSLoRkhT2d7O3yIE_WTTVgwmeCGPbnaia9ssGSEtF9T2pTNQclx_bVs-sog1-0tp8EfHoxMgOSAgoYCtUkq1TC3_wfcxW35vQWKrV_STH0sjIlPvDh61PEx5bISFo-y8hN1a6-HgfMPNjZF0ygSw0v0z9Z9JYyLmLVddWMKsGKwF47y6W6z6U8IqytF4gXPfPl4OL5lseLakA_5bsQBG5vtr0d4yjhRQI2os_7KHGzlE85a9KUpBXeZF4dtkXT8Hl9IqZAx3lNCpItOT2vjPr8d9elcth__k94i8fWz8RIztHc2cCari7qFbWZIxMOQQwzUPYqbSFg_4mISggFR0lxw9UcbEPT0jKebT9gtikPerC3rS4dMl4JfJ592A6wAaTmYEtjhwmroYXCQkMxl1RCy1f7rSflzQtEuRa13X9_wtIlxNbz_fUtzLt8mQuB8xUNpwz6-uA8258pzk0JWtd-2-Plm5sxqJPZaTYQSnw1uXQIq5upVEIeSQM_2FXDbOi5bu4fo92h_gIx_6l_1eC2NkrcInrSawe_kBnT1iUs1ZgcWj5MHmCTDKCgNN_ya8BbPM2SWBEEf6ix6EsnmP7jcLe38VxrAbkF3bILUcG9st6yaBdMZevTI6DNrIzLyMEUdx6C39NOy8Swu2clu_r1K4_3xiVRj5I1N_AtnFMV-5yMvK3GEQJvtgsrjj81iuseoIUPH50Z5l-q5Mv6nrdIgc_I9DQzy8V8HCjbR1QOLWX93gwqJ19cW45dKuaOVTc18AQMGmFr_GL1gITldLD-3R0jWp4Psa8zZTz4WBs3Z67dFmWI2KhcLDppUMraxqbo7XqjkUfrckq0FmvueFKDLNtlt8xywxXsXL7WupdsGIqpVqolh7YlhHIfCSvCDki0Q3H8lygS8JLTWDGxA-74zyVyA3wOb8Ueeewvl5O80l_JITfqKLN-ZtLN_UWHeE60jD5yhbq-YynTuMnpw9RMnmverUWEnk-PacyQjefVsqejRKkS8kbDglvx7XVMIdFYih-sEjI40Qgd9CGgwoDxpDI2PbDDJsI0cgASoJZXUtd2VzdC0xMKID.m3u8")
+    vlc.add("https://video-weaver.iad03.hls.ttvnw.net/v1/playlist/CqsGpzYpzKcWmBVwh7QD0JezeM6QZgZmd5tdZl-ls08XoF1yZcl4Mg0WerqjsiQ6PPyHbxZT0zx0CAUCM60HtlzvJOu-_8_mlKrQCGrooUf5ydel0byd8FKUOFKxPAqaAp1Fk_U4a0jXp0F1we5Rmjr-f-sJyKSRGJq3rUv8bZ6JHPsr5gwOtUj8XHsjnRywJ2oJ_8MRMJZx8xT2p_58tjx-SBRWZvReJexUxLREugaBuCa3DEJqJqsuBlyPQrP1tXQ1zKJJHk9koQCHNmb_0Xc699kEACybuWkg_QzecEzoLC45OML8hiT7a4hUHuK8skIYUOStATWFr_F0K3ocOWyVk6YDbXz-IuJKa74QQlb2_rGFyiEaWHlH8Q-YCeIOaoTAfD6PTlnT66065247BMM4Fd6NLBvGyzfq4z5l6YuYSKOjm8HqHRiAMrBj-DphQn1B3x-VecVB7vJ4B1lXdMvC7rb194tIDMHiKsL2bql83w5BnY4CKVV5gzs7UfzptpgPSm1O--9ffSiMrIG527rcxFYY6VIKIf5ooCBM4wxw1ilRoSiPRgU8kqMKpUGxFo4i_0GwZ7dWVgNSGfZkS8vXEjWdgwLFU6LGWGm0DDjpWRnH6eeQJOBFEuOnpLafS63Ye6T1ps3Ny1CSWKVUd3d1xRb5iP0Tj-HaYay17AgZq-Q5TMfdkwDkdJ1x8iWq4h5yePPeJyg8TgDv1nuk0-wa3DkMd26e2-vqDvkjiNgBwhgHDkhIOZt-yNTO5Q2Up8KB3nR7t9GJtaah5CUDvzgL8aicvH3t-EWRO99DLg9QKYiM-tggudyqJuTlp_KM2nbNnzZG9_LPdnXcxx6M8VWEQ_V2d5cdyun1jtQrQ4r9abT54EbOVBRRTxpPZhm8wXZYe6Df_uvsfnwY8wWPsCkph_jaD33v2UanLqs5pqMjWJhTEv-5_VFOsgUsg7bzZY6YTVB-v5P-OCpbKGgiWqfZD4zTb6zFjClt9rmcn9W8lMtHI8O9UZ3m_E5r27FvSv1Lpsl966nvx4YnNheo-rpAu_9vJSDvyvOMxGDgAhzvxLGQeLrJv4iSTZFN4BoMEPabMOe-Qk4iBJeZIAEqCWV1LXdlc3QtMTCiAw.m3u8")
     vlc.play()
-    emoji = discord.utils.get(message.guild.emojis, name="aaaaaaaaaaaaaaaaaaa")
-    await message.channel.send( str(emoji) )
 
 
 # Maverick command
 @bot.command(aliases = ["maverick"], description = ": Megerman.")
 async def maverickPosting(message):
+    catEmoji = discord.utils.get(message.guild.emojis, name="leadansen")
+    await message.channel.send(str(catEmoji) + " Thought-provoking " + str(catEmoji))
+    vlc.clear()
+    vlc.add("D:\Loambot Shitposting\\mav.mp4")
     vlc.play()
-    emoji = discord.utils.get(message.guild.emojis, name="aaaaaaaaaaaaaaaaaaa")
-    await message.channel.send( str(emoji) )
 
 
 # Die command
-@bot.command(aliases = ["die"], description = ": die")
-async def dieOomfie(message, *arg):
+@bot.command(aliases = ["dieoomfie"], description = ": die")
+async def dieOomfie(message):
     emoji = discord.utils.get(message.guild.emojis, name="gst")
     await message.channel.send( str(emoji) )
     vlc.pause()
@@ -462,6 +472,42 @@ async def playHotChickHeaven(message):
     # Change bot's status to reflect new playlist
     await bot.change_presence(status=discord.Status.idle,
                               activity=discord.Game(name=f'Hot Chick Heaven!'))
+    
+
+#Fesh Pince
+@bot.command(aliases = ["woolsmoth"], description = ": FUNNY JOKE.")
+async def playFeshPince(message):
+    catEmoji = discord.utils.get(message.guild.emojis, name="PogPrince")
+    await message.channel.send(str(catEmoji) + " Feelin' Fresh " + str(catEmoji))
+    vlc.clear()
+    vlc.add("D:\Loambot Shitposting\\Playlists\\feshpince.xspf")
+    vlc.play()
+    
+    time.sleep(3)
+    catEmoji = discord.utils.get(message.guild.emojis, name="chew")
+    await message.channel.send("(By the way, I'm too lazy to actually make it autoplay after this is over. Change the channel after you're done having a giggle) " + str(catEmoji))
+
+    # Change bot's status to reflect new playlist
+    await bot.change_presence(status=discord.Status.idle,
+                              activity=discord.Game(name=f'Wool Smoth'))
+
+
+#Dekembe Mutombo commercial
+@bot.command(aliases = ["nonono"], description = ": FUNNY JOKE.")
+async def playMutombo(message):
+    catEmoji = discord.utils.get(message.guild.emojis, name="saywhat")
+    await message.channel.send(str(catEmoji) + "  NOT IN MY HOUSE " + str(catEmoji))
+    vlc.clear()
+    vlc.add("D:\Loambot Shitposting\\NBA_Dikembe_Mutombo_GEICO_Commercial_no_no_no_not_in_my_house.mp4")
+    vlc.play()
+    
+    time.sleep(3)
+    catEmoji = discord.utils.get(message.guild.emojis, name="chew")
+    await message.channel.send("(By the way, I'm too lazy to actually make it autoplay after this is over. Change the channel after you're done having a giggle) " + str(catEmoji))
+
+    # Change bot's status to reflect new playlist
+    await bot.change_presence(status=discord.Status.idle,
+                              activity=discord.Game(name=f'Wool Smoth'))
 
 ########################################################################################################################
 

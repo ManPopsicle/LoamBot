@@ -15,16 +15,25 @@ class showPlaylistToTitle(Enum):
     amphibia = "Amphibia"
     bigcitygreens = "Big City Greens"
     boondocks = "The Boondocks"
+    cdm = "Celebrity Deathmatch"
     chowder = "Chowder"
     courage = "Courage the Cowardly Dog"
+    dragonball = "Dragonball"
+    dragonballz = "Dragonball Z"
+    dragonballgt = "Dragonball GT"
     duckdodgers = "Duck Dodgers"
     eds = "Ed, Edd n Eddy"
     freshprince = "The Fresh Prince of Bel-Air"
     futurama = "Futurama"
     insidejob = "Inside Job"
+    invincible = "Invincible"
     koth = "King of the Hill"
     medabots = "Medabots"
     metalocalypse = "Metalocalypse"
+    kanto = "Pokemon Indigo League and Adventures in the Orange Islands "
+    johto = "Pokemon The Johto Journeys, Johto League Champions, and Master Quest"
+    hoenn = "Pokemon Advanced, Advanced Challenge, Advanced Battle, and Battle Frontier"
+    sinnoh = "Pokemon Diamond and Pearl and Battle Dimension"
     regularshow = "The Regular Show"
     renstimpy = "The Ren and Stimpy Show"
     jack = "Samurai Jack"
@@ -45,6 +54,13 @@ def iterShowEnum(listItem):
     return False
 
 
+class SecretCommands(Enum):
+    maverick = 1
+    dieoomfie = 2
+    barzoople = 3
+    hotchickheaven = 4
+    woolsmoth = 5
+    nonono = 6
 
 
 
@@ -71,7 +87,17 @@ def commandGenerate():
     
     return commandMsg
   
-
+# Random chance to get one of the secret commands
+def secretGenerate():
+    for item in SecretCommands:
+        if random.randint(1, 150) == item.value:
+            commandMsg = ("""``` Try !""" + item.name + """ ```""")
+            break
+        else:
+            commandMsg = ("""``` That wasn't very secret, now was it? ```""")
+        
+    return commandMsg
+  
 
 ############################################################################################################
 # Show List Class
@@ -82,7 +108,7 @@ def commandGenerate():
 
 class PaginationView(discord.ui.View):
     CurrentPage : int = 1
-    Seperator : int = 5
+    Seperator : int = 10
 
     async def send(self, ctx):
         self.message = await ctx.send(view=self)
