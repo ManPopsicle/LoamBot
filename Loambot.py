@@ -7,6 +7,7 @@ import vlc
 from python_telnet_vlc import VLCTelnet
 
 import PlaylistUtils
+import ShowState
 
 from modules import config_parser
 from modules.logs import *
@@ -380,6 +381,18 @@ async def playZim(message):
 ########################################################################################################################
 # Other stupid commands
 ########################################################################################################################
+
+
+#Play stream command
+
+@bot.command(aliases = ["gamescom"], description = ": vidya.")
+async def playGamescom(message):
+    vlc.clear()
+    vlc.add("https://video-weaver.jfk06.hls.ttvnw.net/v1/playlist/CqEG2qmacaXyamVOnkPf_vyc2gftNBljkSLoRkhT2d7O3yIE_WTTVgwmeCGPbnaia9ssGSEtF9T2pTNQclx_bVs-sog1-0tp8EfHoxMgOSAgoYCtUkq1TC3_wfcxW35vQWKrV_STH0sjIlPvDh61PEx5bISFo-y8hN1a6-HgfMPNjZF0ygSw0v0z9Z9JYyLmLVddWMKsGKwF47y6W6z6U8IqytF4gXPfPl4OL5lseLakA_5bsQBG5vtr0d4yjhRQI2os_7KHGzlE85a9KUpBXeZF4dtkXT8Hl9IqZAx3lNCpItOT2vjPr8d9elcth__k94i8fWz8RIztHc2cCari7qFbWZIxMOQQwzUPYqbSFg_4mISggFR0lxw9UcbEPT0jKebT9gtikPerC3rS4dMl4JfJ592A6wAaTmYEtjhwmroYXCQkMxl1RCy1f7rSflzQtEuRa13X9_wtIlxNbz_fUtzLt8mQuB8xUNpwz6-uA8258pzk0JWtd-2-Plm5sxqJPZaTYQSnw1uXQIq5upVEIeSQM_2FXDbOi5bu4fo92h_gIx_6l_1eC2NkrcInrSawe_kBnT1iUs1ZgcWj5MHmCTDKCgNN_ya8BbPM2SWBEEf6ix6EsnmP7jcLe38VxrAbkF3bILUcG9st6yaBdMZevTI6DNrIzLyMEUdx6C39NOy8Swu2clu_r1K4_3xiVRj5I1N_AtnFMV-5yMvK3GEQJvtgsrjj81iuseoIUPH50Z5l-q5Mv6nrdIgc_I9DQzy8V8HCjbR1QOLWX93gwqJ19cW45dKuaOVTc18AQMGmFr_GL1gITldLD-3R0jWp4Psa8zZTz4WBs3Z67dFmWI2KhcLDppUMraxqbo7XqjkUfrckq0FmvueFKDLNtlt8xywxXsXL7WupdsGIqpVqolh7YlhHIfCSvCDki0Q3H8lygS8JLTWDGxA-74zyVyA3wOb8Ueeewvl5O80l_JITfqKLN-ZtLN_UWHeE60jD5yhbq-YynTuMnpw9RMnmverUWEnk-PacyQjefVsqejRKkS8kbDglvx7XVMIdFYih-sEjI40Qgd9CGgwoDxpDI2PbDDJsI0cgASoJZXUtd2VzdC0xMKID.m3u8")
+    vlc.play()
+    emoji = discord.utils.get(message.guild.emojis, name="aaaaaaaaaaaaaaaaaaa")
+    await message.channel.send( str(emoji) )
+
 
 # Maverick command
 @bot.command(aliases = ["maverick"], description = ": Megerman.")
