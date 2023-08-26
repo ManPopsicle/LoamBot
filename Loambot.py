@@ -3,11 +3,11 @@ import os
 import discord
 from discord.ext import commands
 
-import vlc
 from python_telnet_vlc import VLCTelnet
 
 import PlaylistUtils
 import ShowState
+from RemoteVlc import RemoteVlc
 
 from modules import config_parser
 from modules.logs import *
@@ -15,7 +15,9 @@ from modules.logs import *
 from enum import Enum
 import random
 import time
-
+import csv
+from os import listdir
+from os.path import isfile, join
 
 
 #############################################################################################################################
@@ -31,11 +33,16 @@ logging.basicConfig(format='%(levelname)s:%(message)s',
 PASSWORD = config.vlc.password
 HOST = config.vlc.host
 PORT = config.vlc.port
-vlc = VLCTelnet(HOST, PASSWORD, PORT)    
+PORTTWO = config.vlc.port + 10
+vlc = VLCTelnet(HOST, PASSWORD, PORT)
+vlctwo = RemoteVlc()
 
 vlcIsShuffled = config.vlc.shuffle
 shuffle = 'on' if vlcIsShuffled else 'off'
 vlc.random(False, shuffle)
+
+# Initialize connection with local database
+ShowStates = ShowState.ShowState()
 
 # Instantiate Discord bot representation
 bot = commands.Bot(command_prefix=config.discord.bot_prefix, intents=discord.Intents.all(), help_command=None)
@@ -82,20 +89,34 @@ async def listChannels(ctx):
     
 
 # General play command for shows. Argument should be one of the names of the playlist
+# Parameters:
+#   arg : Playlist name
 @bot.command(aliases = ["play"], description = ": Chooses a playlist from list of shows based on user argument and plays it.")
 async def playShow(message, arg):
     # Look for user input in the library list
     if arg in config.libraries.shows_library:
         # Playlist found. Locate it in the file directory and play it
         vlc.clear()
-        playlist = "D:\Shows\[Playlists]\\" + arg + ".xspf"
+        playlist = r"D:\Shows\[Playlists]\\" + arg + r".xspf"
         vlc.add(playlist)
+        # vlctwo.addPlaylist(playlist)
         vlc.play()
+        
         # Announce it
-        await message.channel.send("NOW PLAYING " + PlaylistUtils.iterShowEnum(arg).upper())
+        ShowStates.CurrentShow = arg
+        title = ShowStates.convertToTitle(arg)
+        await message.channel.send("NOW PLAYING " + title.upper())
         # Change bot's status to reflect new playlist
         await bot.change_presence(status=discord.Status.online,
-                                activity=discord.Game(name=f'Now streaming ' + PlaylistUtils.iterShowEnum(arg)))
+                                activity=discord.Game(name=f'Now streaming ' + title))
+        
+        # Go to saved episode and timestamp
+        lastEpisode = ShowStates.getLastEpisode(arg)
+        # Find the saved timestamp and convert to seconds
+        #timeObj = time.strptime(ShowStates.getSeekTime(arg), '%M:%S')
+        #totalSecs = timeObj.tm_sec + timeObj.tm_min*60 + timeObj.tm_hour*3600
+        #time.sleep(1)           # Need to wait first before firing a seek, or it is too fast for VLC to pick up on
+        #vlc.seek(totalSecs)
         
     # No playlist found; play the master playlist
     else:
@@ -134,10 +155,21 @@ async def shufflePlaylist(message, arg = None):
         await message.channel.send(str(catEmoji) + " Shuffle toggled to " + str(vlcIsShuffled) + ". " + str(catEmoji))
 
 
+# goto command
+@bot.command(aliases = ["goto"], description = ": Goes to the next episode of whatever playlist.")
+async def gototime(message, episode):
+    #vlc.stop()
+    #vlc.goto(int(episode) + 3)
+    vlctwo.goto(int(episode))
+    emoji = discord.utils.get(message.guild.emojis, name="Sandyl12Angy")
+    await message.channel.send("This shit sucks! NEXT EPISODE. " + episode)
+
+
 # Next command
 @bot.command(aliases = ["next", "skip"], description = ": Goes to the next episode of whatever playlist.")
 async def nextEpisode(message):
     vlc.next()
+    # vlctwo.next()
     emoji = discord.utils.get(message.guild.emojis, name="Sandyl12Angy")
     await message.channel.send("This shit sucks! NEXT EPISODE. " + str(emoji) )
 
@@ -146,6 +178,7 @@ async def nextEpisode(message):
 @bot.command(aliases = ["prev", "previous", "back", "goback"], description = ": Goes back to the previous episode of whatever playlist.")
 async def previousEpisode(message):
     vlc.prev()
+    # vlctwo.previous()
     emoji = discord.utils.get(message.guild.emojis, name="SanDrill")
     await message.channel.send("Rewind the tape! That shit was sick. " + str(emoji) )
 
@@ -154,6 +187,7 @@ async def previousEpisode(message):
 @bot.command(aliases = ["pause"], description = ": Pauses current episode.")
 async def pauseEpisode(message):
     vlc.pause()
+    # vlctwo.pause()
     emoji = discord.utils.get(message.guild.emojis, name="SanDrill")
     await message.channel.send("Hang on, gotta take a leak. " + str(emoji) )
 
@@ -162,6 +196,7 @@ async def pauseEpisode(message):
 @bot.command(aliases = ["resume"], description = ": Resumes current episode.")
 async def resumeEpisode(message):
     vlc.play()
+    #vlctwo.play()
     emoji = discord.utils.get(message.guild.emojis, name="SanDrill")
     await message.channel.send("Alright, I closed/opened the window. " + str(emoji) )
 
@@ -509,6 +544,32 @@ async def playMutombo(message):
     await bot.change_presence(status=discord.Status.idle,
                               activity=discord.Game(name=f'Wool Smoth'))
 
+
+
+@bot.command(aliases = ["csv"], description = ": FUNNY JOKE.")
+async def makeCsv(message, show):
+    
+    entries = [['FileName', 'FilePath', 'Index', 'Season', 'EpisodeNumberInSeason', 'fuckyou']]
+    season = 9
+    episodeInSeason = 1
+    index = 338
+    defaultPath = r"D:\Shows\\" + ShowStates.convertToTitle(show)
+    for path, subdirs, files in os.walk(defaultPath):
+        season+=1
+        episodeInSeason = 1
+        for name in files:
+            fullPath = os.path.join(path, name)
+            justName = os.path.splitext(name)[0]
+            entries.append([justName, fullPath, index, season, episodeInSeason, episodeInSeason])
+            episodeInSeason+=1
+            index+=1
+
+    filename = "spongebob2.csv"
+    with open(filename, 'w') as csvfile:
+        csvwriter = csv.writer(csvfile)
+        csvwriter.writerows(entries)
+    #vlc.add(fullPath)
+    #vlc.play()
 ########################################################################################################################
 
 
