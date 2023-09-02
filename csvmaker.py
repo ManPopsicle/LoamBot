@@ -12,7 +12,7 @@ def makeCsv(show):
     entries = [['FileName', 'FilePath', 'EpisodeName', 'Index', 'Season', 'EpisodeNumberInSeason', 'fuckyou']]
 
     index = 0
-    defaultPath = r"D:\Shows\\[Anime]\\" + ShowStates.convertToTitle(show)
+    defaultPath = r"D:\Shows\\" + ShowStates.convertToTitle(show)
     for path, subdirs, files in os.walk(defaultPath):
         for name in files:
             fullPath = os.path.join(path, name)
@@ -45,4 +45,4 @@ def makeCsv(show):
         csvwriter.writerows(entries)
 
 
-makeCsv("sinnoh")
+makeCsv("spongebob")

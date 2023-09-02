@@ -6,7 +6,7 @@ from discord.ext import commands
 from python_telnet_vlc import VLCTelnet
 
 import PlaylistUtils
-import ShowState
+import DatabaseUtils
 from RemoteVlc import RemoteVlc
 
 from modules import config_parser
@@ -42,7 +42,19 @@ shuffle = 'on' if vlcIsShuffled else 'off'
 vlc.random(False, shuffle)
 
 # Initialize connection with local database
-ShowStates = ShowState.ShowState()
+dbUtils = DatabaseUtils.DbUtils()
+
+# Save the list of KeyNames 
+showList = dbUtils.buildShowList()
+keyList = []
+for item in showList:
+    keyList.append(item[1])
+dbUtils.keyList = keyList
+
+# Write out default path of playlist folder
+
+defaultPlaylistPath = "D:/Shows/[Playlists]/"
+defaultAnimePlaylistPath = "D:/Shows/[Playlists]/[Anime]/"
 
 # Instantiate Discord bot representation
 bot = commands.Bot(command_prefix=config.discord.bot_prefix, intents=discord.Intents.all(), help_command=None)
@@ -81,7 +93,7 @@ async def listChannels(ctx):
     data = config.libraries.shows_library
     
     paginateView = PlaylistUtils.PaginationView()   
-    paginateView.data = data
+    paginateView.data = showList
     await paginateView.send(ctx)
 
 
@@ -94,24 +106,25 @@ async def listChannels(ctx):
 @bot.command(aliases = ["play"], description = ": Chooses a playlist from list of shows based on user argument and plays it.")
 async def playShow(message, arg):
     # Look for user input in the library list
-    if arg in config.libraries.shows_library:
+    if arg in keyList:
         # Playlist found. Locate it in the file directory and play it
-        vlc.clear()
-        playlist = r"D:\Shows\[Playlists]\\" + arg + r".xspf"
-        vlc.add(playlist)
-        # vlctwo.addPlaylist(playlist)
-        vlc.play()
+        # vlc.clear()
+        # playlist = r"D:/Shows/[Playlists]/" + arg + r".xspf"
+        # vlc.add(playlist)
+        filePath = defaultPlaylistPath + arg +".xspf"
+        vlctwo.addPlaylist(filePath)
+        # vlc.play()
         
         # Announce it
-        ShowStates.CurrentShow = arg
-        title = ShowStates.convertToTitle(arg)
+        dbUtils.CurrentShow = arg
+        title = dbUtils.convertToTitle(arg)
         await message.channel.send("NOW PLAYING " + title.upper())
         # Change bot's status to reflect new playlist
         await bot.change_presence(status=discord.Status.online,
                                 activity=discord.Game(name=f'Now streaming ' + title))
         
         # Go to saved episode and timestamp
-        lastEpisode = ShowStates.getLastEpisode(arg)
+        lastEpisode = dbUtils.getCurrentEpisode(arg)
         # Find the saved timestamp and convert to seconds
         #timeObj = time.strptime(ShowStates.getSeekTime(arg), '%M:%S')
         #totalSecs = timeObj.tm_sec + timeObj.tm_min*60 + timeObj.tm_hour*3600
@@ -235,22 +248,22 @@ async def volumeControl(message, toggle, value):
 @bot.command(aliases = ["cc", "changechannel", "remote", "surf"], description = ": Randomly selects a new playlist to play.")
 async def changeChannel(message):
     # Find a random playlist
-    showList = list(PlaylistUtils.showPlaylistToTitle)
-    randomSelect = str(random.choice(showList))[20:]
+    randomSelect = str(random.choice(keyList))
 
+    print(randomSelect)
     # Send message
     emoji = discord.utils.get(message.guild.emojis, name="spaghettishake")
     await message.channel.send("Gimme the remote. I'm changing the channel. " + str(emoji) )
 
-    # Play the playlist
-    vlc.clear()
-    playlist = "D:\Shows\[Playlists]\\" + randomSelect + ".xspf"
-    vlc.add(playlist)
-    vlc.play()
+    # # Play the playlist
+    # vlc.clear()
+    # playlist = "D:\Shows\[Playlists]\\" + randomSelect + ".xspf"
+    # vlc.add(playlist)
+    # vlc.play()
 
     # Change bot's status to reflect new playlist
     await bot.change_presence(status=discord.Status.online,
-                            activity=discord.Game(name=f'Now streaming ' + PlaylistUtils.iterShowEnum(randomSelect)))
+                            activity=discord.Game(name=f'Now streaming ' + dbUtils.convertToTitle(randomSelect)))
 
 
 ######################################################################
@@ -545,31 +558,6 @@ async def playMutombo(message):
                               activity=discord.Game(name=f'Wool Smoth'))
 
 
-
-@bot.command(aliases = ["csv"], description = ": FUNNY JOKE.")
-async def makeCsv(message, show):
-    
-    entries = [['FileName', 'FilePath', 'Index', 'Season', 'EpisodeNumberInSeason', 'fuckyou']]
-    season = 9
-    episodeInSeason = 1
-    index = 338
-    defaultPath = r"D:\Shows\\" + ShowStates.convertToTitle(show)
-    for path, subdirs, files in os.walk(defaultPath):
-        season+=1
-        episodeInSeason = 1
-        for name in files:
-            fullPath = os.path.join(path, name)
-            justName = os.path.splitext(name)[0]
-            entries.append([justName, fullPath, index, season, episodeInSeason, episodeInSeason])
-            episodeInSeason+=1
-            index+=1
-
-    filename = "spongebob2.csv"
-    with open(filename, 'w') as csvfile:
-        csvwriter = csv.writer(csvfile)
-        csvwriter.writerows(entries)
-    #vlc.add(fullPath)
-    #vlc.play()
 ########################################################################################################################
 
 

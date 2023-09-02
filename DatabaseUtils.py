@@ -2,17 +2,21 @@ from pymongo import MongoClient, ReturnDocument
 
 import os
 
-class ShowState():
+class DbUtils():
     client = MongoClient("localhost", 27017)
     db = client.Loambot
     showsCollection = db.Shows
     CurrentShow = ""
+    keyList = []
     
 
-
-    def getAllShows(self):
+    # Builds list of shows for PaginationView to create a command out of
+    def buildShowList(self):
+        showList = []
         for show in self.showsCollection.find():
-            print(show)
+            showEntry = [show['ShowName'], show['KeyName']]
+            showList.append(showEntry)
+        return showList
 
 
     # Updates a show manually
@@ -29,7 +33,7 @@ class ShowState():
     # Finds the last played episode's filename
     # Parameters:
     #   name: Playlist name (Don't use actual name)
-    def getLastEpisode(self, playlistName):
+    def getCurrentEpisode(self, playlistName):
         return self.showsCollection.find_one(
             {"KeyName": playlistName})['CurrentEpisode']
     
@@ -46,12 +50,17 @@ class ShowState():
     # Uses the input from vlc.info() to extract the file name of the currently playing show
     # Parameters:
     #   showData : The output of vlc.info(). It is a dictionary of dictionaries
-    def findFileName(self, showData):
+    def findFileNameFromVlcInfo(self, showData):
         data = showData["data"]
         filename = os.path.splitext(data["filename"])
         return filename[0]
     
     
+    def buildPlaylist(self, playlistName):
+        return self.showsCollection.find_many(
+            {"KeyName": playlistName})['FilePath']
+        
+
     # Gets the show's name using the playlistName
     # Parameters:
     #   name: Playlist name

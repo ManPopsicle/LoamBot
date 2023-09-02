@@ -10,49 +10,6 @@ from enum import Enum
 import random
 import time
 
-class showPlaylistToTitle(Enum):
-    adventuretime = "Adventure Time"
-    amphibia = "Amphibia"
-    bigcitygreens = "Big City Greens"
-    boondocks = "The Boondocks"
-    cdm = "Celebrity Deathmatch"
-    chowder = "Chowder"
-    courage = "Courage the Cowardly Dog"
-    dragonball = "Dragonball"
-    dragonballz = "Dragonball Z"
-    dragonballgt = "Dragonball GT"
-    duckdodgers = "Duck Dodgers"
-    eds = "Ed, Edd n Eddy"
-    freshprince = "The Fresh Prince of Bel-Air"
-    futurama = "Futurama"
-    insidejob = "Inside Job"
-    invincible = "Invincible"
-    koth = "King of the Hill"
-    medabots = "Medabots"
-    metalocalypse = "Metalocalypse"
-    kanto = "Pokemon Indigo League and Adventures in the Orange Islands "
-    johto = "Pokemon The Johto Journeys, Johto League Champions, and Master Quest"
-    hoenn = "Pokemon Advanced, Advanced Challenge, Advanced Battle, and Battle Frontier"
-    sinnoh = "Pokemon Diamond and Pearl and Battle Dimension"
-    regularshow = "The Regular Show"
-    renstimpy = "The Ren and Stimpy Show"
-    jack = "Samurai Jack"
-    seinfeld = "Seinfeld"
-    siflolly = "Sifl and Olly"
-    spongebob = "Spongebob Squarepants"
-    sunny = "It's Always Sunny In Philadelphia"
-    transformersarm = "Transformers: Armada"
-    transformersrid = "Transformers: Robots In Disguise"
-    zim = "Invader Zim"
-
-# Returns a properly formatted version of a show name
-def iterShowEnum(listItem):
-    for member in showPlaylistToTitle:
-        if listItem == member.name:
-            return member.value
-    
-    return False
-
 
 class SecretCommands(Enum):
     maverick = 1
@@ -83,7 +40,7 @@ def commandGenerate():
         !seek <MM:SS> : Goes to a certain timestamp in the episode
         !volume <up/down> <number> : Raise or lower the volume.
         !list : Shows the available shows
-        Other secret commands???```""")
+        !secret : ???```""")
     
     return commandMsg
   
@@ -104,8 +61,6 @@ def secretGenerate():
 ############################################################################################################
 
 
-
-
 class PaginationView(discord.ui.View):
     CurrentPage : int = 1
     Seperator : int = 10
@@ -118,7 +73,7 @@ class PaginationView(discord.ui.View):
     def CreateEmbed(self, data):
         embed = discord.Embed(title=f"Available Shows  Page {self.CurrentPage} / {int(len(self.data) / self.Seperator) + 1}")
         for item in data:
-            embed.add_field(name=iterShowEnum(item), value=item, inline=False)
+            embed.add_field(name=item[0], value=item[1], inline=False)
         return embed
         
 
@@ -199,7 +154,6 @@ class PaginationView(discord.ui.View):
 # List shows command
 def channelGenerate(message):
 
-    showList = list(showPlaylistToTitle)
     index = 1           # Keeps count of page
 
     commandMsg = ("""```
