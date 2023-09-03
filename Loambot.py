@@ -7,7 +7,6 @@ import vlctelnet
 
 import PlaylistUtils
 import DatabaseUtils
-from RemoteVlc import RemoteVlc
 
 from modules import config_parser
 from modules.logs import *
@@ -35,7 +34,6 @@ HOST = config.vlc.host
 PORT = config.vlc.port
 PORTTWO = config.vlc.port + 10
 vlc = vlctelnet.VLCTelnet(HOST, PASSWORD, PORT)
-vlctwo = RemoteVlc()
 
 # Set the initial shuffle setting
 vlcIsShuffled = config.vlc.shuffle
@@ -116,7 +114,6 @@ async def playShow(message, arg):
         for filePath in filePathList:
             vlc.enqueue(filePath)
         # filePath = defaultPlaylistPath + arg +".xspf" 
-        #vlctwo.addPlaylist(filePathList)
         vlc.play()
         vlc.playlistThing()
         
@@ -178,7 +175,6 @@ async def shufflePlaylist(message, arg = None):
 async def gototime(message, episode):
     #vlc.stop()
     vlc.goto(int(episode))
-    #vlctwo.goto(int(episode))
     emoji = discord.utils.get(message.guild.emojis, name="Sandyl12Angy")
     await message.channel.send("This shit sucks! NEXT EPISODE. " + episode)
 
@@ -187,7 +183,6 @@ async def gototime(message, episode):
 @bot.command(aliases = ["next", "skip"], description = ": Goes to the next episode of whatever playlist.")
 async def nextEpisode(message):
     vlc.next()
-    # vlctwo.next()
     emoji = discord.utils.get(message.guild.emojis, name="Sandyl12Angy")
     await message.channel.send("This shit sucks! NEXT EPISODE. " + str(emoji) )
 
@@ -196,7 +191,6 @@ async def nextEpisode(message):
 @bot.command(aliases = ["prev", "previous", "back", "goback"], description = ": Goes back to the previous episode of whatever playlist.")
 async def previousEpisode(message):
     vlc.prev()
-    # vlctwo.previous()
     emoji = discord.utils.get(message.guild.emojis, name="SanDrill")
     await message.channel.send("Rewind the tape! That shit was sick. " + str(emoji) )
 
@@ -205,7 +199,6 @@ async def previousEpisode(message):
 @bot.command(aliases = ["pause"], description = ": Pauses current episode.")
 async def pauseEpisode(message):
     vlc.pause()
-    # vlctwo.pause()
     emoji = discord.utils.get(message.guild.emojis, name="SanDrill")
     await message.channel.send("Hang on, gotta take a leak. " + str(emoji) )
 
@@ -214,7 +207,6 @@ async def pauseEpisode(message):
 @bot.command(aliases = ["resume"], description = ": Resumes current episode.")
 async def resumeEpisode(message):
     vlc.play()
-    #vlctwo.play()
     emoji = discord.utils.get(message.guild.emojis, name="SanDrill")
     await message.channel.send("Alright, I closed/opened the window. " + str(emoji) )
 
