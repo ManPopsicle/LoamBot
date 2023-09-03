@@ -123,7 +123,7 @@ class VLCTelnet(object):
         firstFileElement = indexedPlaylist[2]
         print(firstFileElement)
         #TODO: WHY IS THE REGEX NOT WORKING
-        index = re.match(r"\|  .{\d+)}", str(firstFileElement))
+        index = re.match(r"\|  .{([0-9]+)}", str(firstFileElement))
         if index:
             print(index.group())
         else:
