@@ -4,5 +4,4 @@ python_version >= "3.6"
 asyncio==3.4.3
 confuse~=1.7
 requests~=2.31.0
-python-telnet-vlc==2.*
 pymongo

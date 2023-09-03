@@ -3,7 +3,7 @@ import os
 import discord
 from discord.ext import commands
 
-from python_telnet_vlc import VLCTelnet
+import vlctelnet
 
 import PlaylistUtils
 import DatabaseUtils
@@ -34,9 +34,10 @@ PASSWORD = config.vlc.password
 HOST = config.vlc.host
 PORT = config.vlc.port
 PORTTWO = config.vlc.port + 10
-vlc = VLCTelnet(HOST, PASSWORD, PORT)
+vlc = vlctelnet.VLCTelnet(HOST, PASSWORD, PORT)
 vlctwo = RemoteVlc()
 
+# Set the initial shuffle setting
 vlcIsShuffled = config.vlc.shuffle
 shuffle = 'on' if vlcIsShuffled else 'off'
 vlc.random(False, shuffle)
@@ -45,22 +46,18 @@ vlc.random(False, shuffle)
 dbUtils = DatabaseUtils.DbUtils()
 
 # Save the list of KeyNames 
-showList = dbUtils.buildShowList()
-keyList = []
+showList = dbUtils.buildShowList()          # Contains both KeyNames and ShowNames
+keyList = []                                # Contains just the KeyNames
 for item in showList:
     keyList.append(item[1])
 dbUtils.keyList = keyList
 
 # Write out default path of playlist folder
-
 defaultPlaylistPath = "D:/Shows/[Playlists]/"
 defaultAnimePlaylistPath = "D:/Shows/[Playlists]/[Anime]/"
 
 # Instantiate Discord bot representation
 bot = commands.Bot(command_prefix=config.discord.bot_prefix, intents=discord.Intents.all(), help_command=None)
-
-# Help command?
-#formatter = commands.HelpCommand(show_check_failure=False)
 
 info("Starting application...")
 
@@ -81,14 +78,18 @@ async def on_ready():
 ############################################################################################################
 
 
-# Help command 
+# Help command to display available commands.
+# commandGenerate() generates a formatted message that is not auto-written; you will need to fill out the text yourself
 @bot.command(aliases = ["help"], description = ": Chooses a playlist from list of shows based on user argument and plays it.")
 async def commands(message):
     cmdMsg = PlaylistUtils.commandGenerate()
     await message.channel.send(cmdMsg)
 
 
-@bot.command(aliases = ["tvguide", "list"], description = ": Randomly selects a new playlist to play.")
+# List()
+# Parameters: ctx - Context view of the Discord bot. Should be auto-populated
+# Returns: None, but it will produce a list in the channel of the shows currently loaded from the config
+@bot.command(aliases = ["tvguide", "list"], description = ": Lists out the pagination view")
 async def listChannels(ctx):
     data = config.libraries.shows_library
     
@@ -101,6 +102,7 @@ async def listChannels(ctx):
     
 
 # General play command for shows. Argument should be one of the names of the playlist
+#TODO: Need to add a case for when users just use !play
 # Parameters:
 #   arg : Playlist name
 @bot.command(aliases = ["play"], description = ": Chooses a playlist from list of shows based on user argument and plays it.")
@@ -108,12 +110,15 @@ async def playShow(message, arg):
     # Look for user input in the library list
     if arg in keyList:
         # Playlist found. Locate it in the file directory and play it
-        # vlc.clear()
-        # playlist = r"D:/Shows/[Playlists]/" + arg + r".xspf"
-        # vlc.add(playlist)
-        filePath = defaultPlaylistPath + arg +".xspf"
-        vlctwo.addPlaylist(filePath)
-        # vlc.play()
+        vlc.clear()
+        #playlist = r"D:/Shows/[Playlists]/" + arg + r".xspf"
+        filePathList = dbUtils.buildPlaylist(arg)
+        for filePath in filePathList:
+            vlc.enqueue(filePath)
+        # filePath = defaultPlaylistPath + arg +".xspf" 
+        #vlctwo.addPlaylist(filePathList)
+        vlc.play()
+        vlc.playlistThing()
         
         # Announce it
         dbUtils.CurrentShow = arg
@@ -172,8 +177,8 @@ async def shufflePlaylist(message, arg = None):
 @bot.command(aliases = ["goto"], description = ": Goes to the next episode of whatever playlist.")
 async def gototime(message, episode):
     #vlc.stop()
-    #vlc.goto(int(episode) + 3)
-    vlctwo.goto(int(episode))
+    vlc.goto(int(episode))
+    #vlctwo.goto(int(episode))
     emoji = discord.utils.get(message.guild.emojis, name="Sandyl12Angy")
     await message.channel.send("This shit sucks! NEXT EPISODE. " + episode)
 

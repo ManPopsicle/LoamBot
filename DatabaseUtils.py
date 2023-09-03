@@ -56,9 +56,23 @@ class DbUtils():
         return filename[0]
     
     
+    # Produces a list of file paths to be fed into the VLC MediaListPlayer object
+    # by querying the database to find the correct show's collection of episodes
+    # Parameters:
+    #   playlistName: The KeyName value of the show in question
     def buildPlaylist(self, playlistName):
-        return self.showsCollection.find_many(
-            {"KeyName": playlistName})['FilePath']
+        # First find the name of the collection based on the user's KeyName input
+        collectionName = self.showsCollection.find_one(
+            {"KeyName": playlistName})['ShowCollection'].collection
+        # Return the entire collection by searching for it based on its name
+        queriedCollection = self.db[collectionName]
+        # Get all the episodes
+        episodeList = queriedCollection.find({})
+        filePathList = []
+        # Find the file path of every single episode and compile it into one list
+        for episode in episodeList:
+            filePathList.append(episode['FilePath'])
+        return filePathList
         
 
     # Gets the show's name using the playlistName
