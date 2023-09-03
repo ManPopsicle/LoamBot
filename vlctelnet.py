@@ -123,12 +123,15 @@ class VLCTelnet(object):
         firstFileElement = indexedPlaylist[2]
         print(firstFileElement)
         #TODO: WHY IS THE REGEX NOT WORKING
-        index = re.match(r"\|  .{([0-9]+)}", str(firstFileElement))
-        if index:
-            print(index.group())
+        searchExpression = r"(\d+)"
+        indexStr = re.search(searchExpression, str(firstFileElement))
+        if indexStr:
+            indexStr = indexStr.group()
         else:
-            print("Couldn't find numbers in " + firstFileElement)
-        command = 'goto {}'.format(item)
+            print("Couldn't find results using " + searchExpression)
+        index = int(indexStr)
+        command = 'goto {}'.format(item + index)
+
         self.run_command(command)
 
     def repeat(self, switch=True, setting='on'):
