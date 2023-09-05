@@ -30,17 +30,20 @@ class SecretCommands(Enum):
 def commandGenerate():
     commandMsg = ("""```
         Available commands: 
-        !play <show_name> : Choose a show to play
+        !play <show_name> <S##E##>: Choose a show to play. You can optionally put in the season and episode number to watch that specific episode.
         !shuffle <on/off> : Toggles the shuffle function.
         !cc, !changechannel, !remote, !surf : Randomly changes to another playlist
+        !goto <index> : Skip to an exact episode. Currently just accepts an index number of the playlist.
         !next, !skip : Go to the next episode
         !prev, !previous, !back, !goback : Go back to the previous episode
         !pause : Pauses the current episode
         !resume : Resumes the current episode
         !seek <MM:SS> : Goes to a certain timestamp in the episode
         !volume <up/down> <number> : Raise or lower the volume.
-        !list : Shows the available shows
-        !secret : ???```""")
+        !list : Lists the available shows
+        !episodes <show_name> : List out all the episodes of a show and their index number. Episode names are currently broken.
+        !secret : ???
+                  ```""")
     
     return commandMsg
   

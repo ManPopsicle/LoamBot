@@ -133,6 +133,7 @@ class VLCTelnet(object):
             print("Couldn't find offset")
         # Send the telnet command, with the playlist offset
         finalIndex = item + index
+        print(str(item) + " " + str(index) + " " + str(finalIndex))
         command = 'goto {}'.format(finalIndex)
 
         self.run_command(command)

@@ -16,6 +16,7 @@ import random
 import datetime
 import time
 import csv
+import re
 from os import listdir
 from os.path import isfile, join
 
@@ -97,13 +98,27 @@ async def commands(message):
     await message.channel.send(cmdMsg)
 
 
-# List()
+# Lists out all the available shows, and the keyword needed to play them
 # Parameters: ctx - Context view of the Discord bot. Should be auto-populated
 # Returns: None, but it will produce a list in the channel of the shows currently loaded from the config
-@bot.command(aliases = ["tvguide", "list"], description = ": Lists out the pagination view")
+@bot.command(aliases = ["list"], description = ": Lists out the pagination view")
 async def listChannels(ctx):    
     paginateView = PlaylistUtils.PaginationView()   
     paginateView.data = showList
+    await paginateView.send(ctx)
+
+
+
+# Lists out all episodes and their index to go to them directly
+# Parameters: 
+#   ctx - Context view of the Discord bot. Should be auto-populated
+#   arg - Playlist to be listed out
+# Returns: None, but it will produce a list in the channel of the shows currently loaded from the config
+@bot.command(aliases = ["episodes"], description = ": Lists out the pagination view for a specific show")
+async def listEpisodes(ctx, arg):    
+    paginateView = PlaylistUtils.PaginationView()  
+    episodeList = dbUtils.buildEpisodeList(arg) 
+    paginateView.data = episodeList
     await paginateView.send(ctx)
 
 
@@ -128,7 +143,7 @@ def saveCurrentShowInfo():
 # Parameters:
 #   arg : Playlist name
 @bot.command(aliases = ["play"], description = ": Chooses a playlist from list of shows based on user argument and plays it.")
-async def playShow(message, arg=None):
+async def playShow(message, arg=None, episode=None):
     # First, save the current info if there is a show currently playing
 
     # Look for user input in the library list
@@ -151,8 +166,26 @@ async def playShow(message, arg=None):
         await bot.change_presence(status=discord.Status.online,
                                 activity=discord.Game(name=f'Now streaming ' + title))
         
+        # Allow for S##E## formatted arguments to go to specific episodes
+        if(episode != None):
+            # Get season number
+            justSeason = re.search("S(\d+)", episode.upper()).group()
+            justSeasonNum = justSeason.split("S")[1]
+            if re.search("0.", justSeasonNum) != None:
+                justSeasonNum = re.search("0.", justSeasonNum).group().split("0")[1]
+
+            # Get episode number
+            justEpisode = re.search("E(\d+)", episode.upper()).group()
+            justEpisodeNum = justEpisode.split("E")[1]
+            if re.search("0.", justEpisodeNum) != None:
+                justEpisodeNum = re.search("0.", justEpisodeNum).group().split("0")[1]
+
+            # Find the index of the episode based on season and episode number
+            index = dbUtils.getIndexFromSeasonAndEpisode(arg, justSeasonNum, justEpisodeNum)
+            vlc.goto(index)
+
         # Check if the CurrentEpisode field is empty in Shows collection
-        if(dbUtils.showsCollection.find_one({'KeyName':arg})['CurrentEpisode'] != ""):
+        elif(dbUtils.showsCollection.find_one({'KeyName':arg})['CurrentEpisode'] != ""):
             # Go to saved episode and timestamp
             curEpIdx = dbUtils.getCurrentEpisodeIndex()
             vlc.goto(curEpIdx)

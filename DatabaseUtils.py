@@ -18,6 +18,21 @@ class DbUtils():
             showEntry = [show['ShowName'], show['KeyName']]
             showList.append(showEntry)
         return showList
+    
+        
+
+    # Builds list of shows for PaginationView to create a command out of
+    def buildEpisodeList(self, playlistName):
+        episodeList = []
+        collectionName = self.showsCollection.find_one(
+            {"KeyName": playlistName})['ShowsCollection'].collection
+        
+        queriedCollection = self.db[collectionName]
+        for episode in queriedCollection.find({}):
+            episodeEntry = [episode['EpisodeName'], episode['Index']]
+            episodeList.append(episodeEntry)
+
+        return episodeList
 
 
     # Updates a show manually
@@ -31,7 +46,6 @@ class DbUtils():
             {"KeyName": self.CurrentShow})['ShowsCollection'].collection
         
         # Return the entire collection by searching for it based on its name
-        queriedCollection = self.db[collectionName]
         show = self.showsCollection.find_one_and_update(
             {"KeyName": self.CurrentShow}, 
             {'$set': {"CurrentEpisode": curEp, "CurrentTime": curTime}})
@@ -130,11 +144,32 @@ class DbUtils():
     
     # Gets the show's name using the playlistName
     # Parameters:
-    #   name: Playlist name
+    #   playlistName: Playlist name
     def getShowIdFromKeyName(self, playlistName):
         
         return self.showsCollection.find_one(
             {"KeyName": playlistName})['_id']
+
+    
+    # Gets the index of an episode based on a season and episode number
+    # Parameters:
+    #   playlistName: Playlist name
+    #   seasonNum: Season number
+    #   episodeNum: Episode number
+    def getIndexFromSeasonAndEpisode(self, playlistName, seasonNum, episodeNum):
+        
+        # Find the correct episode collection
+        collectionName = self.showsCollection.find_one(
+            {"KeyName": playlistName})['ShowsCollection'].collection
+        queriedCollection = self.db[collectionName]
+        
+        print(collectionName + " " + seasonNum + " " + episodeNum)
+        episode = queriedCollection.find_one(
+            {"$and": [{'Season': int(seasonNum)}, {'EpisodeNumberInSeason': int(episodeNum)}] }, {'Index': 1})
+        print(episode['Index'])
+        return episode['Index']
+
+
 
     
     # Produces a list of file paths to be fed into the VLC MediaListPlayer object
