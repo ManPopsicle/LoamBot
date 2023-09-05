@@ -121,16 +121,19 @@ class VLCTelnet(object):
         # First two elements of the list are some header junk
         # Grab the third element to get the first episode in playlist
         firstFileElement = indexedPlaylist[2]
-        print(firstFileElement)
-        #TODO: WHY IS THE REGEX NOT WORKING
         searchExpression = r"(\d+)"
         indexStr = re.search(searchExpression, str(firstFileElement))
+        index = 0
+
+        # Found an offset; change index to the offset
         if indexStr:
             indexStr = indexStr.group()
+            index = int(indexStr)
         else:
-            print("Couldn't find results using " + searchExpression)
-        index = int(indexStr)
-        command = 'goto {}'.format(item + index)
+            print("Couldn't find offset")
+        # Send the telnet command, with the playlist offset
+        finalIndex = item + index
+        command = 'goto {}'.format(finalIndex)
 
         self.run_command(command)
 

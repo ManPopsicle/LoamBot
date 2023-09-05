@@ -13,6 +13,7 @@ from modules.logs import *
 
 from enum import Enum
 import random
+import datetime
 import time
 import csv
 from os import listdir
@@ -54,6 +55,18 @@ dbUtils.keyList = keyList
 defaultPlaylistPath = "D:/Shows/[Playlists]/"
 defaultAnimePlaylistPath = "D:/Shows/[Playlists]/[Anime]/"
 
+
+# Get current show's keyword
+rawInfo = vlc.info()
+# If VLC was already open and playing, get the current show
+if(rawInfo):
+    fileNameAndExtension = rawInfo['data']['filename']
+    fileName = os.path.splitext(fileNameAndExtension)[0]
+    dbUtils.CurrentShow = dbUtils.getKeyNameFromEpisodeName(fileName)
+# If VLC wasn't playing anything, set show to empty
+else:
+    dbUtils.CurrentShow = ""
+
 # Instantiate Discord bot representation
 bot = commands.Bot(command_prefix=config.discord.bot_prefix, intents=discord.Intents.all(), help_command=None)
 
@@ -88,15 +101,29 @@ async def commands(message):
 # Parameters: ctx - Context view of the Discord bot. Should be auto-populated
 # Returns: None, but it will produce a list in the channel of the shows currently loaded from the config
 @bot.command(aliases = ["tvguide", "list"], description = ": Lists out the pagination view")
-async def listChannels(ctx):
-    data = config.libraries.shows_library
-    
+async def listChannels(ctx):    
     paginateView = PlaylistUtils.PaginationView()   
     paginateView.data = showList
     await paginateView.send(ctx)
 
 
+# Helper function for retrieving necessary data to savestate the current show
+# Grabs the current timestamp of the show and queries the database to retrieve the current episode
+def saveCurrentShowInfo():
 
+    # Get current time 
+    vlc.pause()
+    curTime_secs = vlc.get_time()
+
+    # Get current episode
+    # In case you don't remember,  episode's ObjectId can't be saved to the corresponding Show collection entry
+    # because vlc.info() only offers the file name, so searching needs to be based on that 
+    rawInfo = vlc.info()
+    print(rawInfo)
+    curFileName = rawInfo['data']['filename']
+    curFileName = os.path.splitext(curFileName)[0]
+    print(curFileName)
+    dbUtils.saveShowEntry(curFileName, curTime_secs)
     
 
 # General play command for shows. Argument should be one of the names of the playlist
@@ -104,34 +131,36 @@ async def listChannels(ctx):
 # Parameters:
 #   arg : Playlist name
 @bot.command(aliases = ["play"], description = ": Chooses a playlist from list of shows based on user argument and plays it.")
-async def playShow(message, arg):
+async def playShow(message, arg=None):
+    # First, save the current info if there is a show currently playing
+    if(dbUtils.CurrentShow != ""):
+        saveCurrentShowInfo()
     # Look for user input in the library list
     if arg in keyList:
+        dbUtils.currentShow = arg
         # Playlist found. Locate it in the file directory and play it
         vlc.clear()
-        #playlist = r"D:/Shows/[Playlists]/" + arg + r".xspf"
         filePathList = dbUtils.buildPlaylist(arg)
-        for filePath in filePathList:
+        for filePath in filePathList: 
             vlc.enqueue(filePath)
         # filePath = defaultPlaylistPath + arg +".xspf" 
         vlc.play()
-        vlc.playlistThing()
         
         # Announce it
-        dbUtils.CurrentShow = arg
-        title = dbUtils.convertToTitle(arg)
+        title = dbUtils.getShowNameFromKeyName(arg)
         await message.channel.send("NOW PLAYING " + title.upper())
         # Change bot's status to reflect new playlist
         await bot.change_presence(status=discord.Status.online,
                                 activity=discord.Game(name=f'Now streaming ' + title))
         
-        # Go to saved episode and timestamp
-        lastEpisode = dbUtils.getCurrentEpisode(arg)
-        # Find the saved timestamp and convert to seconds
-        #timeObj = time.strptime(ShowStates.getSeekTime(arg), '%M:%S')
-        #totalSecs = timeObj.tm_sec + timeObj.tm_min*60 + timeObj.tm_hour*3600
-        #time.sleep(1)           # Need to wait first before firing a seek, or it is too fast for VLC to pick up on
-        #vlc.seek(totalSecs)
+        # Check if the CurrentEpisode field is empty in Shows collection
+        if(dbUtils.showsCollection.find_one({'KeyName':arg})['CurrentEpisode'] != ""):
+            # Go to saved episode and timestamp
+            curEpIdx = dbUtils.getCurrentEpisodeIndex(arg)
+            vlc.goto(curEpIdx)
+            # Find the saved timestamp (should be in only seconds)
+            curEpTime = dbUtils.getSeekTime(arg)
+            vlc.seek(curEpTime)
         
     # No playlist found; play the master playlist
     else:
@@ -172,8 +201,7 @@ async def shufflePlaylist(message, arg = None):
 
 # goto command
 @bot.command(aliases = ["goto"], description = ": Goes to the next episode of whatever playlist.")
-async def gototime(message, episode):
-    #vlc.stop()
+async def gototime(message, episode):    
     vlc.goto(int(episode))
     emoji = discord.utils.get(message.guild.emojis, name="Sandyl12Angy")
     await message.channel.send("This shit sucks! NEXT EPISODE. " + episode)
@@ -247,20 +275,21 @@ async def changeChannel(message):
     # Find a random playlist
     randomSelect = str(random.choice(keyList))
 
-    print(randomSelect)
     # Send message
     emoji = discord.utils.get(message.guild.emojis, name="spaghettishake")
     await message.channel.send("Gimme the remote. I'm changing the channel. " + str(emoji) )
 
     # # Play the playlist
-    # vlc.clear()
-    # playlist = "D:\Shows\[Playlists]\\" + randomSelect + ".xspf"
-    # vlc.add(playlist)
-    # vlc.play()
+    vlc.clear()
+    filePathList = dbUtils.buildPlaylist(randomSelect)
+    for filePath in filePathList: 
+        vlc.enqueue(filePath)
+    curShow = randomSelect
+    vlc.play()
 
     # Change bot's status to reflect new playlist
     await bot.change_presence(status=discord.Status.online,
-                            activity=discord.Game(name=f'Now streaming ' + dbUtils.convertToTitle(randomSelect)))
+                            activity=discord.Game(name=f'Now streaming ' + dbUtils.getShowNameFromKeyName(randomSelect)))
 
 
 ######################################################################

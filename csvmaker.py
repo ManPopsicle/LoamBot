@@ -1,4 +1,4 @@
-import ShowState
+import DatabaseUtils
 import csv
 import os
 import re
@@ -6,13 +6,13 @@ from os import listdir
 from os.path import isfile, join
 
 # Initialize connection with local database
-ShowStates = ShowState.ShowState()
+dbUtils = DatabaseUtils.DbUtils()
 def makeCsv(show):
     
-    entries = [['FileName', 'FilePath', 'EpisodeName', 'Index', 'Season', 'EpisodeNumberInSeason', 'fuckyou']]
+    entries = [['FileName', 'FilePath', 'EpisodeName', 'Index', 'Season', 'EpisodeNumberInSeason', '_ShowId', 'fuckyou']]
 
     index = 0
-    defaultPath = r"D:\Shows\\" + ShowStates.convertToTitle(show)
+    defaultPath = r"D:\Shows\\" + dbUtils.getShowNameFromKeyName(show)
     for path, subdirs, files in os.walk(defaultPath):
         for name in files:
             fullPath = os.path.join(path, name)
@@ -27,16 +27,15 @@ def makeCsv(show):
                 justSeasonNum = re.search("0.", justSeasonNum).group().split("0")[1]
 
             #Episode
-            if(re.search("E...", justName) != None):
-                justEpisode = re.search("E...", justName).group()
-            else:
-                justEpisode = re.search("E..", justName).group()
+            justEpisode = re.search("E(\d+)", justName).group()
             justEpisodeNum = justEpisode.split("E")[1]
             if re.search("0.", justEpisodeNum) != None:
                 justEpisodeNum = re.search("0.", justEpisodeNum).group().split("0")[1]
             print("season " + justSeasonNum)
             print(justEpisodeNum)
-            entries.append([justName, fullPath, justName, index, justSeasonNum, justEpisodeNum, justEpisodeNum])
+            showId = dbUtils.getShowIdFromKeyName(show)
+            print(showId)
+            entries.append([justName, fullPath, justName, index, justSeasonNum, justEpisodeNum, showId, justEpisodeNum])
             index+=1
 
     filename = str(show)+".csv"
@@ -45,4 +44,4 @@ def makeCsv(show):
         csvwriter.writerows(entries)
 
 
-makeCsv("spongebob")
+makeCsv("boondocks")

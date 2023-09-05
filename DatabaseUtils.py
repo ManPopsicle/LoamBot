@@ -1,4 +1,5 @@
 from pymongo import MongoClient, ReturnDocument
+from bson.objectid import ObjectId
 
 import os
 
@@ -6,7 +7,7 @@ class DbUtils():
     client = MongoClient("localhost", 27017)
     db = client.Loambot
     showsCollection = db.Shows
-    CurrentShow = ""
+    CurrentShow = ""            # This should be a KeyName, not a ShowName value
     keyList = []
     
 
@@ -21,13 +22,21 @@ class DbUtils():
 
     # Updates a show manually
     # Parameters: 
-    #   playlistName: Name of the playlist to locate in database
     #   curEp: VLC-extracted episode name
     #   curTime: VLC-extracted timestamp of show
-    def saveShowEntry(self, playlistName, curEp, curTime):
+    def saveShowEntry(self, curEp, curTime):
+
+        # First find the name of the collection based on the user's KeyName input
+        collectionName = self.showsCollection.find_one(
+            {"KeyName": self.CurrentShow})['ShowCollection'].collection
+        
+        # Return the entire collection by searching for it based on its name
+        queriedCollection = self.db[collectionName]
+        curEpisodeId = queriedCollection.find_one({'FileName' : curEp})
+
         show = self.showsCollection.find_one_and_update(
-            {"KeyName": playlistName}, 
-            {'$set': {"CurrentEpisode": curEp, "CurrentTime": curTime}})
+            {"KeyName": self.CurrentShow}, 
+            {'$set': {"CurrentEpisode": curEpisodeId, "CurrentTime": curTime}})
                 
 
     # Finds the last played episode's filename
@@ -37,6 +46,7 @@ class DbUtils():
         return self.showsCollection.find_one(
             {"KeyName": playlistName})['CurrentEpisode']
     
+    
     # Finds the last played episode's previous time
     # Parameters:
     #   name: Playlist name (Don't use actual name)
@@ -45,16 +55,82 @@ class DbUtils():
         result =  self.showsCollection.find_one(
             {"KeyName": playlistName})['CurrentTime']
         return result
-
-
-    # Uses the input from vlc.info() to extract the file name of the currently playing show
-    # Parameters:
-    #   showData : The output of vlc.info(). It is a dictionary of dictionaries
-    def findFileNameFromVlcInfo(self, showData):
-        data = showData["data"]
-        filename = os.path.splitext(data["filename"])
-        return filename[0]
     
+    
+    # Based on playlist name, find that show's current episode index
+    # This is really just used when a new playlist is loaded and the savestate needs to be loaded
+    # Parameters:
+    #   name: Playlist name
+    def getCurrentEpisodeIndex(self, playlistName):
+        index = 0
+        result = self.showsCollection.find_one(
+            {"KeyName": playlistName})
+        if(result != None):
+            result = self.showsCollection.find_one(
+                {"KeyName": playlistName})['CurrentEpisode']
+            index = result['Index']
+        return index
+
+
+    # Gets the playlist's name using the show's name
+    # Parameters:
+    #   name: Show name
+    def getKeyNameFromShowName(self, showName):
+            
+        result =  self.showsCollection.find_one(
+            {"ShowName": showName})['KeyName']
+        return result
+    
+    
+    # Gets the playlist's name using episode name
+    # This should really only be used on bot restart, when VLC is already up and playing something
+    # This way, it can retrieve the current show dynamically on startup
+    # Parameters:
+    #   name: Show name (retrieved from VLC.info())
+    def getKeyNameFromEpisodeName(self, episodeName):
+        
+        # Iterate through the entire Shows collection
+        for show in self.showsCollection.find():
+            # Search through the individual Show_Data collection for that episode name
+            collection =  show['ShowCollection'].collection
+            if collection == "":
+                continue
+            # Now searching in the individual collection
+            queriedCollection = self.db[collection]
+            # Locate the ShowId of the episode
+            showId = queriedCollection.find_one(
+                {'EpisodeName':episodeName})
+            if (showId != None):
+                showId = queriedCollection.find_one(
+                    {'EpisodeName':episodeName})['_ShowId']
+            # Go back to the Show collection and get the KeyName based on the found ShowId
+            result = self.showsCollection.find_one({'_id': ObjectId(showId)})
+            # If found, return the KeyName
+            if result:
+                result = self.showsCollection.find_one({'_id': ObjectId(showId)})['KeyName']
+                return result
+        
+        # If no results found, return None
+        return None
+        
+    
+    # Gets the show's name using the playlistName
+    # Parameters:
+    #   name: Playlist name
+    def getShowNameFromKeyName(self, playlistName):
+        
+        return self.showsCollection.find_one(
+            {"KeyName": playlistName})['ShowName']
+    
+    
+    # Gets the show's name using the playlistName
+    # Parameters:
+    #   name: Playlist name
+    def getShowIdFromKeyName(self, playlistName):
+        
+        return self.showsCollection.find_one(
+            {"KeyName": playlistName})['_id']
+
     
     # Produces a list of file paths to be fed into the VLC MediaListPlayer object
     # by querying the database to find the correct show's collection of episodes
@@ -64,25 +140,19 @@ class DbUtils():
         # First find the name of the collection based on the user's KeyName input
         collectionName = self.showsCollection.find_one(
             {"KeyName": playlistName})['ShowCollection'].collection
+        
         # Return the entire collection by searching for it based on its name
         queriedCollection = self.db[collectionName]
+
         # Get all the episodes
         episodeList = queriedCollection.find({})
         filePathList = []
+
         # Find the file path of every single episode and compile it into one list
         for episode in episodeList:
             filePathList.append(episode['FilePath'])
         return filePathList
         
-
-    # Gets the show's name using the playlistName
-    # Parameters:
-    #   name: Playlist name
-    def convertToTitle(self, playlistName):
-        
-        return self.showsCollection.find_one(
-            {"KeyName": playlistName})['ShowName']
-
 # {
 #     'data': 
 #     {
