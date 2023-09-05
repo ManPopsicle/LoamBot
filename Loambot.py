@@ -114,15 +114,12 @@ def saveCurrentShowInfo():
     # Get current time 
     vlc.pause()
     curTime_secs = vlc.get_time()
-
     # Get current episode
     # In case you don't remember,  episode's ObjectId can't be saved to the corresponding Show collection entry
     # because vlc.info() only offers the file name, so searching needs to be based on that 
     rawInfo = vlc.info()
-    print(rawInfo)
     curFileName = rawInfo['data']['filename']
     curFileName = os.path.splitext(curFileName)[0]
-    print(curFileName)
     dbUtils.saveShowEntry(curFileName, curTime_secs)
     
 
@@ -133,12 +130,13 @@ def saveCurrentShowInfo():
 @bot.command(aliases = ["play"], description = ": Chooses a playlist from list of shows based on user argument and plays it.")
 async def playShow(message, arg=None):
     # First, save the current info if there is a show currently playing
-    if(dbUtils.CurrentShow != ""):
-        saveCurrentShowInfo()
+
     # Look for user input in the library list
     if arg in keyList:
-        dbUtils.currentShow = arg
+        if(dbUtils.CurrentShow != ""):
+            saveCurrentShowInfo()
         # Playlist found. Locate it in the file directory and play it
+        dbUtils.CurrentShow = arg
         vlc.clear()
         filePathList = dbUtils.buildPlaylist(arg)
         for filePath in filePathList: 
@@ -156,11 +154,12 @@ async def playShow(message, arg=None):
         # Check if the CurrentEpisode field is empty in Shows collection
         if(dbUtils.showsCollection.find_one({'KeyName':arg})['CurrentEpisode'] != ""):
             # Go to saved episode and timestamp
-            curEpIdx = dbUtils.getCurrentEpisodeIndex(arg)
+            curEpIdx = dbUtils.getCurrentEpisodeIndex()
             vlc.goto(curEpIdx)
             # Find the saved timestamp (should be in only seconds)
+            time.sleep(1)
             curEpTime = dbUtils.getSeekTime(arg)
-            vlc.seek(curEpTime)
+            vlc.seek(int(curEpTime))
         
     # No playlist found; play the master playlist
     else:
