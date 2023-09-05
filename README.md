@@ -6,7 +6,7 @@ Discord bot for Sandy Loam's Discord server. Mostly here to make streaming carto
 
 This bot establishes a connection to your VLC interface, allowing you to control the stream bot through Discord commands.
 
-- !play your VLC playlists by listing them in your config.yaml
+- !play videos on VLC by accessing a MongoDB to dynamically seek and build a playlist of shows.
 - Don't like what's on? Go to the !next episode! Don't like the show at all? !changechannel to another show!
 - !shuffle on to get some variety. !shuffle off to keep it in season order.
 - For more details, use !help
