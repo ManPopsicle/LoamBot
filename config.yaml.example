@@ -2,11 +2,11 @@ appName: Loambot
 logLevel: WARN
 
 Discord:
-  BotToken: ""
+  BotToken: ""			# Get this from discord.developer.com	
   BotPrefix: "!"
   OwnerID: ""  # Right-click on your profile picture -> "Copy ID"
 
-VLC:
+VLC:					# Changes these values according to what you gave the .bat file
   Password: "pass"
   Host: "127.0.0.1"
   Port: 3000

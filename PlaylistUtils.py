@@ -10,41 +10,14 @@ from enum import Enum
 import random
 import time
 
-class showPlaylistToTitle(Enum):
-    adventuretime = "Adventure Time"
-    amphibia = "Amphibia"
-    bigcitygreens = "Big City Greens"
-    boondocks = "The Boondocks"
-    chowder = "Chowder"
-    courage = "Courage the Cowardly Dog"
-    duckdodgers = "Duck Dodgers"
-    eds = "Ed, Edd n Eddy"
-    freshprince = "The Fresh Prince of Bel-Air"
-    futurama = "Futurama"
-    insidejob = "Inside Job"
-    koth = "King of the Hill"
-    medabots = "Medabots"
-    metalocalypse = "Metalocalypse"
-    regularshow = "The Regular Show"
-    renstimpy = "The Ren and Stimpy Show"
-    jack = "Samurai Jack"
-    seinfeld = "Seinfeld"
-    siflolly = "Sifl and Olly"
-    spongebob = "Spongebob Squarepants"
-    sunny = "It's Always Sunny In Philadelphia"
-    transformersarm = "Transformers: Armada"
-    transformersrid = "Transformers: Robots In Disguise"
-    zim = "Invader Zim"
 
-# Returns a properly formatted version of a show name
-def iterShowEnum(listItem):
-    for member in showPlaylistToTitle:
-        if listItem == member.name:
-            return member.value
-    
-    return False
-
-
+class SecretCommands(Enum):
+    maverick = 1
+    dieoomfie = 2
+    barzoople = 3
+    hotchickheaven = 4
+    woolsmoth = 5
+    nonono = 6
 
 
 
@@ -57,32 +30,43 @@ def iterShowEnum(listItem):
 def commandGenerate():
     commandMsg = ("""```
         Available commands: 
-        !play <show_name> : Choose a show to play
+        !play <show_name> <S##E##>: Choose a show to play. You can optionally put in the season and episode number to watch that specific episode.
         !shuffle <on/off> : Toggles the shuffle function.
         !cc, !changechannel, !remote, !surf : Randomly changes to another playlist
+        !goto <index> : Skip to an exact episode. Currently just accepts an index number of the playlist.
         !next, !skip : Go to the next episode
         !prev, !previous, !back, !goback : Go back to the previous episode
         !pause : Pauses the current episode
         !resume : Resumes the current episode
         !seek <MM:SS> : Goes to a certain timestamp in the episode
         !volume <up/down> <number> : Raise or lower the volume.
-        !list : Shows the available shows
-        Other secret commands???```""")
+        !list : Lists the available shows
+        !episodes <show_name> : List out all the episodes of a show and their index number. Episode names are currently broken.
+        !secret : ???
+                  ```""")
     
     return commandMsg
   
-
+# Random chance to get one of the secret commands
+def secretGenerate():
+    for item in SecretCommands:
+        if random.randint(1, 150) == item.value:
+            commandMsg = ("""``` Try !""" + item.name + """ ```""")
+            break
+        else:
+            commandMsg = ("""``` That wasn't very secret, now was it? ```""")
+        
+    return commandMsg
+  
 
 ############################################################################################################
 # Show List Class
 ############################################################################################################
 
 
-
-
 class PaginationView(discord.ui.View):
     CurrentPage : int = 1
-    Seperator : int = 5
+    Seperator : int = 10
 
     async def send(self, ctx):
         self.message = await ctx.send(view=self)
@@ -92,7 +76,7 @@ class PaginationView(discord.ui.View):
     def CreateEmbed(self, data):
         embed = discord.Embed(title=f"Available Shows  Page {self.CurrentPage} / {int(len(self.data) / self.Seperator) + 1}")
         for item in data:
-            embed.add_field(name=iterShowEnum(item), value=item, inline=False)
+            embed.add_field(name=item[0], value=item[1], inline=False)
         return embed
         
 
@@ -173,7 +157,6 @@ class PaginationView(discord.ui.View):
 # List shows command
 def channelGenerate(message):
 
-    showList = list(showPlaylistToTitle)
     index = 1           # Keeps count of page
 
     commandMsg = ("""```
