@@ -14,7 +14,7 @@ class DbUtils():
     # Builds list of shows for PaginationView to create a command out of
     def buildShowList(self):
         showList = []
-        for show in self.showsCollection.find():
+        for show in self.showsCollection.find().sort("KeyName"):
             showEntry = [show['ShowName'], show['KeyName']]
             showList.append(showEntry)
         return showList

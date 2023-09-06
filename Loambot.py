@@ -234,9 +234,33 @@ async def shufflePlaylist(message, arg = None):
 # goto command
 @bot.command(aliases = ["goto"], description = ": Goes to the next episode of whatever playlist.")
 async def gototime(message, episode):    
-    vlc.goto(int(episode))
+
+    # First check if parameter is an index or S##E## format
+    isIndex = episode.isdigit() 
+    if(isIndex):
+        vlc.goto(int(episode))
+
+    # Allow for S##E## formatted arguments to go to specific episodes
+    else:
+        # Get season number
+        justSeason = re.search("S(\d+)", episode.upper()).group()
+        justSeasonNum = justSeason.split("S")[1]
+        if re.search("0.", justSeasonNum) != None:
+            justSeasonNum = re.search("0.", justSeasonNum).group().split("0")[1]
+
+        # Get episode number
+        justEpisode = re.search("E(\d+)", episode.upper()).group()
+        justEpisodeNum = justEpisode.split("E")[1]
+        if re.search("0.", justEpisodeNum) != None:
+            justEpisodeNum = re.search("0.", justEpisodeNum).group().split("0")[1]
+
+        # Find the index of the episode based on season and episode number
+        index = dbUtils.getIndexFromSeasonAndEpisode(dbUtils.CurrentShow, justSeasonNum, justEpisodeNum)
+        vlc.goto(index)
+
+
     emoji = discord.utils.get(message.guild.emojis, name="Sandyl12Angy")
-    await message.channel.send("This shit sucks! NEXT EPISODE. " + episode)
+    await message.channel.send("This shit sucks! NEXT EPISODE. " + str(emoji))
 
 
 # Next command
