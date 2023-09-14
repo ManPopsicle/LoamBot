@@ -46,4 +46,4 @@ def makeCsv(show):
         csvwriter.writerows(entries)
 
 
-makeCsv("venturebros")
+makeCsv("amphibia")
