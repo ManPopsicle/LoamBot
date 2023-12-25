@@ -47,7 +47,10 @@ vlc.random(False, shuffle)
 
 # Check if starting up in DB mode or Playlist mode
 db_enabled = config.db.db_enabled
-
+if(db_enabled):
+    info("DATABASE ENABLED")
+else:
+    info("PLAYLIST ENABLED")
 # Write out default path of playlist folder
 defaultPlaylistPath = config.libraries.default_path
 defaultAnimePlaylistPath = config.libraries.default_anime_path
@@ -247,6 +250,7 @@ async def playShow(message, arg=None, episode=None):
         
         # Playlist mode
         else:
+        
             plUtils.CurrentShow = arg
             filePath = defaultPlaylistPath + arg +".xspf" 
             print(filePath)
@@ -267,7 +271,7 @@ async def playShow(message, arg=None, episode=None):
             if(episode != None):
                 vlc.goto(episode)
 
-            # Check if the CurrentEpisode field is empty in the csv
+            # Check if the CurrentEpisode field is empty in the csv 
             else:
                 # Go to saved episode and timestamp
                 curEpInfo = plUtils.getShowStatus()
@@ -277,22 +281,44 @@ async def playShow(message, arg=None, episode=None):
                 # Find the saved timestamp (should be in only seconds)
                 time.sleep(1)
                 vlc.seek(int(curEpTime))
-        
-
-        
+    
     # No playlist found; play the master playlist
     else:
         vlc.clear()
-        
-        randomSelect = str(random.choice(keyList))
-        filePath = defaultPlaylistPath + randomSelect +".xspf" 
-        vlc.add(filePath)
-        vlc.play()
-        # Announce it
-        await message.channel.send("Show not found or misspelled. Now playing random show. Please use !show to check what shows are available.")
-        # Change bot's status to reflect new playlist
-        await bot.change_presence(status=discord.Status.online,
-                                activity=discord.Game(name=f'Now streaming whatever!'))
+        #Database mode
+        if(db_enabled):
+            # No playlist found; play the master playlist            
+            randomSelect = str(random.choice(keyList))
+            dbUtils.CurrentShow = randomSelect
+            filePathList = dbUtils.buildPlaylist(randomSelect)
+            for filePath in filePathList: 
+                print(filePath)
+                vlc.enqueue(filePath)
+            
+            vlc.play()
+            isPlaying = True
+
+            # Announce it
+            await message.channel.send("Show not found or misspelled. Now playing random show. Please use !show to check what shows are available.")
+            # Change bot's status to reflect new playlist
+            await bot.change_presence(status=discord.Status.online,
+                                    activity=discord.Game(name=f'Now streaming whatever!'))
+                
+        #Playlist mode                
+        else:
+            randomSelect = str(random.choice(keyList))
+            filePath = defaultPlaylistPath + randomSelect +".xspf" 
+            vlc.add(filePath)
+            vlc.play()
+            # Announce it
+            await message.channel.send("Show not found or misspelled. Now playing random show. Please use !show to check what shows are available.")
+            # Change bot's status to reflect new playlist
+            await bot.change_presence(status=discord.Status.online,
+                                    activity=discord.Game(name=f'Now streaming whatever!'))
+            isPlaying = True
+
+
+
         
 
 # Shuffle command
@@ -464,4 +490,5 @@ async def changeChannel(message):
 # Begin running
 if __name__ == '__main__':
     info("Connecting to Discord...")
+    info(config.discord.bot_token)
     bot.run(config.discord.bot_token)
