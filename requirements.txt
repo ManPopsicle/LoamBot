@@ -1,6 +1,6 @@
 progress==1.6
 discord
-python_version >= "3.6"
+python_version >= "3.10"
 asyncio==3.4.3
 confuse~=1.7
 requests~=2.31.0

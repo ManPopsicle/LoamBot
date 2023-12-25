@@ -53,7 +53,18 @@ class LibrariesConfig(ConfigSection):
     def __init__(self, data, pull_from_env: bool = True):
         super().__init__(section_key="Libraries", data=data, pull_from_env=pull_from_env)
 
-
+    @property
+    def default_path(self) -> str:
+        return self._get_value(key="DefaultPath", env_name_override="DEFAULT_PATH")
+    
+    @property
+    def default_anime_path(self) -> str:
+        return self._get_value(key="DefaultAnimePath", env_name_override="DEFAULT_ANIME_PATH")
+    
+    @property
+    def default_csv_name(self) -> str:
+        return self._get_value(key="DefaultCsvName", env_name_override="DEFAULT_CSV_NAME")
+    
     @property
     def movie_library(self) -> List[str]:
         data = self._get_value(key="Movies", default=[],
@@ -69,6 +80,7 @@ class LibrariesConfig(ConfigSection):
         if isinstance(data, str):
             return data.split(",")  # Dealing with a comma separated list in an environment variable
         return data
+
 
 class VlcConfig(ConfigSection):
     def __init__(self, data, pull_from_env: bool = True):
@@ -108,6 +120,14 @@ class DiscordConfig(ConfigSection):
         return self._get_value(key="OwnerID", env_name_override="PR_DISCORD_OWNER_ID")
 
 
+class MongoDbConfig(ConfigSection):
+    def __init__(self, data, pull_from_env: bool = True):
+        super().__init__(section_key="MongoDB", data=data, pull_from_env=pull_from_env)
+
+    @property
+    def db_enabled(self) -> bool:
+        return self._get_value(key="DataBaseEnabled", env_name_override="DB_ENABLED")
+    
 
 class Config:
     def __init__(self, app_name: str, config_path: str, fallback_to_env: bool = True):
@@ -124,6 +144,8 @@ class Config:
         self.vlc = VlcConfig(self.config, self.pull_from_env)
         self.discord = DiscordConfig(self.config, self.pull_from_env)
         self.libraries = LibrariesConfig(self.config, self.pull_from_env)
+        self.db = MongoDbConfig(self.config, self.pull_from_env)
+
         try:
             self.log_level = self.config['logLevel'].get() or "INFO"
         except confuse.NotFoundError:

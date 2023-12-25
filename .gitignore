@@ -144,3 +144,4 @@ cython_debug/
 *.priv
 credentials.py
 config.yaml
+CSVs/

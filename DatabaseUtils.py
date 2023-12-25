@@ -14,7 +14,7 @@ class DbUtils():
     # Builds list of shows for PaginationView to create a command out of
     def buildShowList(self):
         showList = []
-        for show in self.showsCollection.find():
+        for show in self.showsCollection.find().sort("KeyName"):
             showEntry = [show['ShowName'], show['KeyName']]
             showList.append(showEntry)
         return showList
@@ -108,17 +108,18 @@ class DbUtils():
     #   name: Show name (retrieved from VLC.info())
     def getKeyNameFromEpisodeName(self, episodeName):
         
-        # Iterate through the entire Shows collection
+        # Iterate through the entire Shows collection to search each show's episode collection
         for show in self.showsCollection.find():
-            # Search through the individual Show_Data collection for that episode name
+            # Retrieve next show's name in the database
             collection =  show['ShowsCollection'].collection
             if collection == "":
                 continue
-            # Now searching in the individual collection
+            # Now searching in the show's individual collection
             queriedCollection = self.db[collection]
             # Locate the ShowId of the episode
             showId = queriedCollection.find_one(
                 {'EpisodeName':episodeName})
+            # Episode found; save off the ShowId
             if (showId != None):
                 showId = queriedCollection.find_one(
                     {'EpisodeName':episodeName})['_ShowId']

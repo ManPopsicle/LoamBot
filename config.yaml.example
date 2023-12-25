@@ -1,44 +1,29 @@
 appName: Loambot
 logLevel: WARN
 
-Discord:
-  BotToken: ""			# Get this from discord.developer.com	
-  BotPrefix: "!"
-  OwnerID: ""  # Right-click on your profile picture -> "Copy ID"
+MongoDB:
+  DataBaseEnabled: False        # If set to false, Loambot will use VLC playlist files instead. 
+                                # Use Libraries section of config to load in playlists
+                                # TODO: Make database connection info configurable. 
+                                # Currently have to go into DatabaseUtils.py to change connect info
 
-VLC:					# Changes these values according to what you gave the .bat file
+Discord:
+  BotToken: "" # See readme for information on how to get BotToken, under Setup
+  BotPrefix: "!"
+  OwnerID: ""  # Click on profile picture on Discord (bottom left corner) -> Click "Copy User ID"
+
+VLC:
   Password: "pass"
   Host: "127.0.0.1"
-  Port: 3000
+  Port: 5000
   Shuffle: False        # When bot first launches, determines if playlist should be randomized at start
 
 Libraries:
-  # Name each show exactly how the VLC playlist is named
+  DefaultPath: "INSERT PATH FOR PLAYLISTS HERE. USE TWO \\ FOR THE PATH"
+  DefaultAnimePath: "INSERT OPTIONAL PATH FOR ANIME PLAYLISTS HERE"
+  DefaultCsvName: "timestamp"
+  # List each show, using the name of each VLC playlist (no extension)
   Shows:
-    - adventuretime
-    - amphibia
-    - beavisbutthead
-    - bigcitygreens
-    - boondocks
-    - cdm
-    - chowder
-    - courage
-    - duckdodgers
-    - eds
-    - freshprince
-    - futurama
-    - insidejob
-    - invincible
-    - koth
-    - medabots
-    - metalocalypse
-    - regularshow
-    - renstimpy
-    - jack
-    - seinfeld
-    - siflolly
-    - spongebob
-    - sunny
-    - transformersarm
-    - transformersrid
-    - zim
+    #- spongebob
+    #- seinfeld
+    #- freshprince
