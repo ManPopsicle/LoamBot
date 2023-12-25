@@ -63,10 +63,12 @@ class PLUtils():
     def buildShowList(self, keyList):
 
         showList = []
-
+        entryNum = 1
         for name in keyList:
-            showEntry = [ShowToKeyEnum[name], name]
+            defaultTitle = "Show #" + str(entryNum)
+            showEntry = [entryNum, name]
             showList.append(showEntry)
+            entryNum += 1
         return showList
 
 
