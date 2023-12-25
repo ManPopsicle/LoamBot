@@ -7,6 +7,7 @@ import vlctelnet
 
 import PlaylistUtils
 import DatabaseUtils
+import csvmaker
 
 from modules import config_parser
 from modules.logs import *
@@ -34,39 +35,61 @@ logging.basicConfig(format='%(levelname)s:%(message)s',
 PASSWORD = config.vlc.password
 HOST = config.vlc.host
 PORT = config.vlc.port
-PORTTWO = config.vlc.port + 10
 vlc = vlctelnet.VLCTelnet(HOST, PASSWORD, PORT)
+
+# Initialize PlaylistUtils
+plUtils = PlaylistUtils.PLUtils()
 
 # Set the initial shuffle setting
 vlcIsShuffled = config.vlc.shuffle
 shuffle = 'on' if vlcIsShuffled else 'off'
 vlc.random(False, shuffle)
 
-# Initialize connection with local database
-dbUtils = DatabaseUtils.DbUtils()
-
-# Save the list of KeyNames 
-showList = dbUtils.buildShowList()          # Contains both KeyNames and ShowNames
-keyList = []                                # Contains just the KeyNames
-for item in showList:
-    keyList.append(item[1])
-dbUtils.keyList = keyList
+# Check if starting up in DB mode or Playlist mode
+db_enabled = config.db.db_enabled
 
 # Write out default path of playlist folder
-defaultPlaylistPath = "D:/Shows/[Playlists]/"
-defaultAnimePlaylistPath = "D:/Shows/[Playlists]/[Anime]/"
+defaultPlaylistPath = config.libraries.default_path
+defaultAnimePlaylistPath = config.libraries.default_anime_path
+
+if(db_enabled):
+    # Initialize connection with local database
+    dbUtils = DatabaseUtils.DbUtils()
+
+    # Save the list of KeyNames 
+    showList = dbUtils.buildShowList()          # Contains both KeyNames and ShowNames
+    keyList = []                                # Contains just the KeyNames
+    for item in showList:
+        keyList.append(item[1])
+    dbUtils.keyList = keyList
+
+# Database not online; use Playlist mode instead
+else:
+    # Pull the show list from the config instead
+    keyList = config.libraries.shows_library
+    plUtils.keyList = keyList
+    plUtils.csvName = config.libraries.default_csv_name
+    plUtils.csvPath = config.libraries.default_path
+    showList = plUtils.buildShowList(keyList)
+    csvmaker.makeTimestampCsv(keyList, plUtils.csvPath, plUtils.csvName)
+
 
 
 # Get current show's keyword
 rawInfo = vlc.info()
+fileName = ""
+isPlaying = False
 # If VLC was already open and playing, get the current show
+# vlc.info() will return empty if VLC was not playing
 if(rawInfo):
     fileNameAndExtension = rawInfo['data']['filename']
     fileName = os.path.splitext(fileNameAndExtension)[0]
+    isPlaying = True
+
+if(db_enabled and fileName != ""):
     dbUtils.CurrentShow = dbUtils.getKeyNameFromEpisodeName(fileName)
-# If VLC wasn't playing anything, set show to empty
-else:
-    dbUtils.CurrentShow = ""
+#else:
+    #TODO: Come up with a way to find what show is playing based on VLC info
 
 # Instantiate Discord bot representation
 bot = commands.Bot(command_prefix=config.discord.bot_prefix, intents=discord.Intents.all(), help_command=None)
@@ -94,19 +117,19 @@ async def on_ready():
 # commandGenerate() generates a formatted message that is not auto-written; you will need to fill out the text yourself
 @bot.command(aliases = ["help"], description = ": Chooses a playlist from list of shows based on user argument and plays it.")
 async def commands(message):
-    cmdMsg = PlaylistUtils.commandGenerate()
+    cmdMsg = plUtils.commandGenerate(db_enabled)
     await message.channel.send(cmdMsg)
 
 
 # Lists out all the available shows, and the keyword needed to play them
 # Parameters: ctx - Context view of the Discord bot. Should be auto-populated
 # Returns: None, but it will produce a list in the channel of the shows currently loaded from the config
-@bot.command(aliases = ["list"], description = ": Lists out the pagination view")
+@bot.command(aliases = ["list", "shows"], description = ": Lists out the pagination view")
 async def listChannels(ctx):    
-    paginateView = PlaylistUtils.PaginationView()   
+    paginateView = PlaylistUtils.PaginationView()
+    paginateView.DbEnabled = db_enabled
     paginateView.data = showList
     await paginateView.send(ctx)
-
 
 
 # Lists out all episodes and their index to go to them directly
@@ -115,11 +138,20 @@ async def listChannels(ctx):
 #   arg - Playlist to be listed out
 # Returns: None, but it will produce a list in the channel of the shows currently loaded from the config
 @bot.command(aliases = ["episodes"], description = ": Lists out the pagination view for a specific show")
-async def listEpisodes(ctx, arg):    
-    paginateView = PlaylistUtils.PaginationView()  
-    episodeList = dbUtils.buildEpisodeList(arg) 
-    paginateView.data = episodeList
-    await paginateView.send(ctx)
+async def listEpisodes(ctx, arg=None):    
+    paginateView = PlaylistUtils.PaginationView()
+    # If Database mode enabled, get the list of episodes of the show
+    if(db_enabled):  
+        if(arg != None):
+            episodeList = dbUtils.buildEpisodeList(arg) 
+            paginateView.data = episodeList
+            await paginateView.send(ctx)
+        else:
+            await ctx.channel.send("Show name is required for this command.")
+    # In Playlist mode, just send a "command disabled" message
+    else:
+        #TODO: Write a function to grab all episodes from directory and list them out
+        await ctx.channel.send("Episode list command currently disabled.")
 
 
 # Helper function for retrieving necessary data to savestate the current show
@@ -127,16 +159,30 @@ async def listEpisodes(ctx, arg):
 def saveCurrentShowInfo():
 
     # Get current time 
-    vlc.pause()
-    curTime_secs = vlc.get_time()
-    # Get current episode
-    # In case you don't remember,  episode's ObjectId can't be saved to the corresponding Show collection entry
-    # because vlc.info() only offers the file name, so searching needs to be based on that 
-    rawInfo = vlc.info()
-    curFileName = rawInfo['data']['filename']
-    curFileName = os.path.splitext(curFileName)[0]
-    dbUtils.saveShowEntry(curFileName, curTime_secs)
-    
+    if(isPlaying):
+        print("HELLO")
+        vlc.pause()
+        curTime_secs = vlc.get_time()
+        # Get current episode
+        # In case you don't remember, episode's ObjectId can't be saved to the corresponding Show collection entry
+        # because vlc.info() only offers the file name, so searching needs to be based on that 
+        rawInfo = vlc.info()
+        curFileName = rawInfo['data']['filename']
+        curFileName = os.path.splitext(curFileName)[0]
+        if(db_enabled):
+            dbUtils.saveShowEntry(curFileName, curTime_secs)
+        else:
+            plUtils.saveShowEntry(curFileName, curTime_secs)
+        
+
+# Lists out all episodes and their index to go to them directly
+# Parameters: 
+#   ctx - Context view of the Discord bot. Should be auto-populated
+#   arg - Playlist to be listed out
+# Returns: None, but it will produce a list in the channel of the shows currently loaded from the config
+@bot.command(aliases = ["save"], description = ": Saves current time and episode of show")
+async def saveShow(message):    
+    saveCurrentShowInfo()
 
 # General play command for shows. Argument should be one of the names of the playlist
 #TODO: Need to add a case for when users just use !play
@@ -146,66 +192,104 @@ def saveCurrentShowInfo():
 async def playShow(message, arg=None, episode=None):
 
     # First, save the current info if there is a show currently playing
-    # if(dbUtils.CurrentShow != ""):
     saveCurrentShowInfo()
     # Look for user input in the library list
     if arg in keyList:
 
         # Playlist found. Locate it in the file directory and play it
-        dbUtils.CurrentShow = arg
         vlc.clear()
-        filePathList = dbUtils.buildPlaylist(arg)
-        for filePath in filePathList: 
+
+        # Database mode
+        if(db_enabled):
+            dbUtils.CurrentShow = arg
+            filePathList = dbUtils.buildPlaylist(arg)
+            for filePath in filePathList: 
+                print(filePath)
+                vlc.enqueue(filePath)
+            
+            vlc.play()
+            isPlaying = True
+                    
+            # Announce it
+            title = dbUtils.getShowNameFromKeyName(arg)
+            await message.channel.send("NOW PLAYING " + title.upper())
+            # Change bot's status to reflect new playlist
+            await bot.change_presence(status=discord.Status.online,
+                                    activity=discord.Game(name=f'Now streaming ' + title))
+                    
+            # Allow for S##E## formatted arguments to go to specific episodes
+            if(episode != None):
+                # Get season number
+                justSeason = re.search("S(\d+)", episode.upper()).group()
+                justSeasonNum = justSeason.split("S")[1]
+                if re.search("0.", justSeasonNum) != None:
+                    justSeasonNum = re.search("0.", justSeasonNum).group().split("0")[1]
+
+                # Get episode number
+                justEpisode = re.search("E(\d+)", episode.upper()).group()
+                justEpisodeNum = justEpisode.split("E")[1]
+                if re.search("0.", justEpisodeNum) != None:
+                    justEpisodeNum = re.search("0.", justEpisodeNum).group().split("0")[1]
+
+                # Find the index of the episode based on season and episode number
+                index = dbUtils.getIndexFromSeasonAndEpisode(arg, justSeasonNum, justEpisodeNum)
+                vlc.goto(index)
+
+            # Check if the CurrentEpisode field is empty in Shows collection
+            elif(dbUtils.showsCollection.find_one({'KeyName':arg})['CurrentEpisode'] != ""):
+                # Go to saved episode and timestamp
+                curEpIdx = dbUtils.getCurrentEpisodeIndex()
+                vlc.goto(curEpIdx)
+                # Find the saved timestamp (should be in only seconds)
+                time.sleep(1)
+                curEpTime = dbUtils.getSeekTime(arg)
+                vlc.seek(int(curEpTime))
+        
+        # Playlist mode
+        else:
+            plUtils.CurrentShow = arg
+            filePath = defaultPlaylistPath + arg +".xspf" 
             print(filePath)
-            vlc.enqueue(filePath)
-        # filePath = defaultPlaylistPath + arg +".xspf" 
-        vlc.play()
+
+            vlc.add(filePath)
+            vlc.play()
+            isPlaying = True
+
+            # Announce it
+            title = PlaylistUtils.ShowToKeyEnum[arg].value
+            await message.channel.send("NOW PLAYING " + title.upper())
+            # Change bot's status to reflect new playlist
+            await bot.change_presence(status=discord.Status.online,
+                                    activity=discord.Game(name=f'Now streaming ' + title))
+            
+            # Accept index number arguments to jump to a specific episode, if given
+            #TODO: Allow for S##E## formatted arguments to go to specific episodes
+            if(episode != None):
+                vlc.goto(episode)
+
+            # Check if the CurrentEpisode field is empty in the csv
+            else:
+                # Go to saved episode and timestamp
+                curEpInfo = plUtils.getShowStatus()
+                curEpisode = curEpInfo["EpisodeName"]
+                curEpTime = curEpInfo["Timestamp"]
+                vlc.enqueue(curEpisode)
+                # Find the saved timestamp (should be in only seconds)
+                time.sleep(1)
+                vlc.seek(int(curEpTime))
         
-        # Announce it
-        title = dbUtils.getShowNameFromKeyName(arg)
-        await message.channel.send("NOW PLAYING " + title.upper())
-        # Change bot's status to reflect new playlist
-        await bot.change_presence(status=discord.Status.online,
-                                activity=discord.Game(name=f'Now streaming ' + title))
-        
-        # Allow for S##E## formatted arguments to go to specific episodes
-        if(episode != None):
-            # Get season number
-            justSeason = re.search("S(\d+)", episode.upper()).group()
-            justSeasonNum = justSeason.split("S")[1]
-            if re.search("0.", justSeasonNum) != None:
-                justSeasonNum = re.search("0.", justSeasonNum).group().split("0")[1]
 
-            # Get episode number
-            justEpisode = re.search("E(\d+)", episode.upper()).group()
-            justEpisodeNum = justEpisode.split("E")[1]
-            if re.search("0.", justEpisodeNum) != None:
-                justEpisodeNum = re.search("0.", justEpisodeNum).group().split("0")[1]
-
-            # Find the index of the episode based on season and episode number
-            index = dbUtils.getIndexFromSeasonAndEpisode(arg, justSeasonNum, justEpisodeNum)
-            vlc.goto(index)
-
-        # Check if the CurrentEpisode field is empty in Shows collection
-        elif(dbUtils.showsCollection.find_one({'KeyName':arg})['CurrentEpisode'] != ""):
-            # Go to saved episode and timestamp
-            curEpIdx = dbUtils.getCurrentEpisodeIndex()
-            vlc.goto(curEpIdx)
-            # Find the saved timestamp (should be in only seconds)
-            time.sleep(1)
-            curEpTime = dbUtils.getSeekTime(arg)
-            vlc.seek(int(curEpTime))
         
     # No playlist found; play the master playlist
     else:
         vlc.clear()
-        # playlist = "D:\Shows\[Playlists]\\[all].xspf"
         
         randomSelect = str(random.choice(keyList))
-        vlc.add(randomSelect)
+        filePath = defaultPlaylistPath + randomSelect +".xspf" 
+        vlc.add(filePath)
         vlc.play()
         # Announce it
-        await message.channel.send("NOW PLAYING WHATEVER COMES TO MIND!")
+        await message.channel.send("Show not found or misspelled. Now playing random show. Please use !show to check what shows are available.")
         # Change bot's status to reflect new playlist
         await bot.change_presence(status=discord.Status.online,
                                 activity=discord.Game(name=f'Now streaming whatever!'))
@@ -261,7 +345,6 @@ async def gototime(message, episode):
         # Find the index of the episode based on season and episode number
         index = dbUtils.getIndexFromSeasonAndEpisode(dbUtils.CurrentShow, justSeasonNum, justEpisodeNum)
         vlc.goto(index)
-
 
     emoji = discord.utils.get(message.guild.emojis, name="Sandyl12Angy")
     await message.channel.send("Playing next episode.")

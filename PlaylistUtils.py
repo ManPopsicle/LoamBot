@@ -9,55 +9,141 @@ from modules.logs import *
 from enum import Enum
 import random
 import time
+import csv
+from tempfile import NamedTemporaryFile
+import shutil
 
 
-class SecretCommands(Enum):
-    maverick = 1
-    dieoomfie = 2
-    barzoople = 3
-    hotchickheaven = 4
-    woolsmoth = 5
-    nonono = 6
-
-
+class ShowToKeyEnum(Enum):
+    adventuretime = "Adventure Time"
+    amphibia = "Amphibia"
+    beavisbutthead = "Beavis and Buttheads"
+    bigcitygreens = "Big City Greens"
+    boondocks = "The Boondocks"
+    cdm = "Celebrity Deathmatch"
+    chowder = "Chowder"
+    courage = "Courage the Cowardly Dog"
+    duckdodgers = "Duck Dodgers"
+    eds = "Ed Edd and Eddy"
+    freshprince = "The Fresh Prince of Bel-Air"
+    futurama = "Futurama"
+    insidejob = "Inside Job"
+    invincible = "Invincible"
+    koth = "King of the Hill"
+    medabots = "Medabots"
+    metalocalypse = "Metalocalypse"
+    regularshow = "The Regular Show"
+    renstimpy = "The Ren and Stimpy Show"
+    jack = "Samurai Jack"
+    seinfeld = "Seinfeld"
+    siflolly = "Sifl and Olly"
+    spongebob = "Spongebob Squarepants"
+    sunny = "It's Always Sunny In Philidelphia"
+    transformersarm = "Transformers Armada"
+    transformersrid = "Transformers Robots In Disguise"
+    zim = "Invader Zim"
 
 ############################################################################################################
 # General Commands
 ############################################################################################################
 
-
-# Help command 
-def commandGenerate():
-    commandMsg = ("""```
-        Available commands: 
-        !play <show_name> <S##E##>: Choose a show to play. You can optionally put in the season and episode number to watch that specific episode.
-        !shuffle <on/off> : Toggles the shuffle function.
-        !cc, !changechannel, !remote, !surf : Randomly changes to another playlist
-        !goto <index> : Skip to an exact episode. Currently just accepts an index number of the playlist.
-        !next, !skip : Go to the next episode
-        !prev, !previous, !back, !goback : Go back to the previous episode
-        !pause : Pauses the current episode
-        !resume : Resumes the current episode
-        !seek <MM:SS> : Goes to a certain timestamp in the episode
-        !volume <up/down> <number> : Raise or lower the volume.
-        !list : Lists the available shows
-        !episodes <show_name> : List out all the episodes of a show and their index number. Episode names are currently broken.
-        !secret : ???
-                  ```""")
+class PLUtils():
     
-    return commandMsg
-  
-# Random chance to get one of the secret commands
-def secretGenerate():
-    for item in SecretCommands:
-        if random.randint(1, 150) == item.value:
-            commandMsg = ("""``` Try !""" + item.name + """ ```""")
-            break
+    CurrentShow = ""            # This should be a KeyName, not a ShowName value
+    keyList = []
+    csvName = ""
+    csvPath = ""
+
+
+    # This function is a replacement for DatabaseUtils' buildShowList.
+    # Without a proper source that maps keynames to full names,
+    # A list of the full names needs to be built by hardcoding the mapping together
+    # This function will return a list of lists, organized as [ShowName, KeyName]
+    # If you plan on adding more shows, you will need to add to this list
+    def buildShowList(self, keyList):
+
+        showList = []
+
+        for name in keyList:
+            showEntry = [ShowToKeyEnum[name], name]
+            showList.append(showEntry)
+        return showList
+
+
+    # Help command 
+    def commandGenerate(self, db_enabled):
+        if(db_enabled):
+            commandMsg = ("""```
+                Available commands: 
+                !play <show_name> <S##E##>: Choose a show to play. You can optionally put in the season and episode number to watch that specific episode.
+                !shuffle <on/off> : Toggles the shuffle function.
+                !cc, !changechannel, !remote, !surf : Randomly changes to another playlist
+                !goto <index> : Skip to an exact episode. Currently just accepts an index number of the playlist.
+                !next, !skip : Go to the next episode
+                !prev, !previous, !back, !goback : Go back to the previous episode
+                !pause : Pauses the current episode
+                !resume : Resumes the current episode
+                !seek <MM:SS> : Goes to a certain timestamp in the episode
+                !volume <up/down> <number> : Raise or lower the volume.
+                !list : Lists the available shows
+                !episodes <show_name> : List out all the episodes of a show and their index number. Episode names are currently broken.
+                        ```""")
         else:
-            commandMsg = ("""``` That wasn't very secret, now was it? ```""")
+            commandMsg = ("""```
+                Available commands: 
+                !play <show_name> <S##E##>: Choose a show to play. You can optionally put in the season and episode number to watch that specific episode.
+                !shuffle <on/off> : Toggles the shuffle function.
+                !cc, !changechannel, !remote, !surf : Randomly changes to another playlist
+                !goto <index> : Skip to an exact episode. Currently just accepts an index number of the playlist.
+                !next, !skip : Go to the next episode
+                !prev, !previous, !back, !goback : Go back to the previous episode
+                !pause : Pauses the current episode
+                !resume : Resumes the current episode
+                !seek <MM:SS> : Goes to a certain timestamp in the episode
+                !volume <up/down> <number> : Raise or lower the volume.
+                !list : Lists the available shows
+                        ```""")
         
-    return commandMsg
-  
+        return commandMsg
+    
+
+    # CSV-based version of the timestamping functionality
+    # Locates and opens the timestamp CSV file, identifies the current show playing,
+    # and writes to a temporary file with an updated timestamp to the correct show row
+    # then overwrites the original file with the temp
+    def saveShowEntry(self, episodeName, curTime_secs):
+
+        fullPath = self.csvPath + self.csvName + ".csv"
+        tempFile = NamedTemporaryFile(mode='w', delete=False, newline='')
+        fields = ['ShowName', 'EpisodeName', 'Timestamp']
+        # Opening timestamp file, writing new timestamp to temp file, and updating file
+        with open(fullPath, 'r', newline='') as csvFile, tempFile:
+            reader = csv.DictReader(csvFile, fieldnames=fields)
+            writer = csv.DictWriter(tempFile, fieldnames=fields)
+            for row in reader:
+                # Entry found, update temp file
+                if row['ShowName'] == str(self.CurrentShow):
+                    row['ShowName'], row['EpisodeName'], row['Timestamp'] = self.CurrentShow, episodeName, curTime_secs
+                    row = {'ShowName': row['ShowName'], 'EpisodeName': row['EpisodeName'], 'Timestamp': row['Timestamp']}
+                writer.writerow(row)
+        
+        # Updating csv file by overwriting it with the temp file
+        shutil.move(tempFile.name, fullPath)
+
+    def getShowStatus(self):
+        fullPath = self.csvPath + self.csvName + ".csv"
+
+        # Opening timestamp file, writing new timestamp to temp file, and updating file
+        with open(fullPath, 'r') as csvFile:
+            reader = csv.DictReader(csvFile)
+            for row in reader:
+                # Entry found, return its data
+                if row['ShowName'] == str(self.CurrentShow):
+                    print(row)
+                    return row
+
+
+        
 
 ############################################################################################################
 # Show List Class
@@ -67,6 +153,7 @@ def secretGenerate():
 class PaginationView(discord.ui.View):
     CurrentPage : int = 1
     Seperator : int = 10
+    DbEnabled : False
 
     async def send(self, ctx):
         self.message = await ctx.send(view=self)
@@ -76,7 +163,10 @@ class PaginationView(discord.ui.View):
     def CreateEmbed(self, data):
         embed = discord.Embed(title=f"Available Shows  Page {self.CurrentPage} / {int(len(self.data) / self.Seperator) + 1}")
         for item in data:
-            embed.add_field(name=item[0], value=item[1], inline=False)
+            if(self.DbEnabled):
+                embed.add_field(name=item[0], value=item[1], inline=False)
+            else:
+                embed.add_field(name=item[1], value="", inline=False)
         return embed
         
 
@@ -151,36 +241,4 @@ class PaginationView(discord.ui.View):
         self.CurrentPage = int(len(self.data) / self.Seperator) + 1
         await self.UpdatedMessage(self.getCurrentPageData())
 
-        
 
-
-# List shows command
-def channelGenerate(message):
-
-    index = 1           # Keeps count of page
-
-    commandMsg = ("""```
-    If you wish to change to a certain show, please type !play <show> using one of the following (remember to @SandyLoamAtSea to give her suggestions!):
-    - adventuretime     (Adventure Time)
-    - amphibia          (Amphibia)
-    - boondocks         (The Boondocks)
-    - chowder           (Chowder)
-    - courage           (Courage the Cowardly Dog)
-    - duckdodgers       (Duck Dodgers)
-    - eds               (Ed, Edd n Eddy)
-    - freshprince       (The Fresh Prince of Bel-Air)
-    - futurama          (Futurama)
-    - insidejob         (Inside Job)
-    - koth              (King of the Hill)
-    - metalocalypse     (Metalocalypse)
-    - regularshow       (The Regular Show)
-    - renstimpy         (The Ren and Stimpy Show)
-    - jack              (Samurai Jack)
-    - seinfeld          (Seinfeld)
-    - siflolly          (Sifl and Olly)
-    - spongebob         (Spongebob Squarepants)
-    - sunny             (It's Always Sunny In Philadelphia)
-    - zim               (Invader Zim)
-         ```""")
-    
-    return commandMsg

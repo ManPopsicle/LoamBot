@@ -46,4 +46,21 @@ def makeCsv(show):
         csvwriter.writerows(entries)
 
 
-makeCsv("amphibia")
+# Helper function for generating a timestamp csv file if it doesn't already exist
+# This file will be used to save off a show's current timestamp, season, episode
+def makeTimestampCsv(keyList, defaultTimestampPath, defaultTimestampName):
+    
+    header = ['ShowName', 'EpisodeName', 'Timestamp']
+    defaultPath = defaultTimestampPath + defaultTimestampName + ".csv"
+
+    # If the timestamp file already exists, exit
+    if(os.path.exists(defaultPath)):
+        return
+
+    with open(defaultPath, 'w', newline='') as csvfile:
+        csvwriter = csv.writer(csvfile)
+        csvwriter.writerow(header)
+        # Create an entry for each show in the keylist; leave values blank
+        for name in keyList:
+            csvwriter.writerow([name, "", ""])
+
