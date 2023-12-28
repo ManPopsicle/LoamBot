@@ -18,12 +18,12 @@ VLC:
   Shuffle: False        # When bot first launches, determines if playlist should be randomized at start
 
 Libraries:
-  DefaultPath: "INSERT PATH FOR PLAYLISTS HERE. USE TWO \\ FOR THE PATH. EX: C:\\Users\\Sandy\\Playlists\\"
-  DefaultCsvName: "timestamp"       # Name of the csv file that gets generated/used for recording show progress
+  DefaultPath: "C:\\Users\\Sandy\\Playlists\\"              # INSERT PATH FOR PLAYLISTS HERE. USE TWO \\ FOR THE PATH.
+  DefaultCsvName: "timestamp"                               # Name of the csv file that gets generated/used for recording show progress
   # List each show, using the name of each VLC playlist (no extension)
   Shows:
     - charlotte
     - ttgl
-    #- spongebob
-    #- seinfeld
-    #- freshprince
+    - spongebob
+    - seinfeld
+    - freshprince
