@@ -74,7 +74,7 @@ class PLUtils():
                 !pause : Pauses the current episode
                 !resume : Resumes the current episode
                 !seek <MM:SS> : Goes to a certain timestamp in the episode
-                !volume <up/down> <number> : Raise or lower the volume. The volume will raise or lower in increments of 5%, according to the input rounded to the nearest increment.
+                !volume <up/down> <number> : Raise or lower the volume. The volume will raise or lower in increments of 5%.
                 !list, !shows : Lists the available shows
                         ```""")
         
