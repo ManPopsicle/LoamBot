@@ -283,13 +283,10 @@ async def playShow(message, arg=None, episode=None):
                 curEpisode = curEpInfo["EpisodeName"]
                 curEpTime = curEpInfo["Timestamp"]
                 
+                # Traverse the playlist's xml file to locate the exact episode
                 tree = ET.ElementTree()
                 tree.parse(filePath)
                 root = tree.getroot()
-                # print("root children:")
-                # for child in root:
-                #     print(child)
-                # print()
 
                 locations = tree.findall("trackList/track/location", {"": "http://xspf.org/ns/0/", "vlc": "http://www.videolan.org/vlc/playlist/ns/0/"})
 
@@ -506,7 +503,6 @@ async def changeChannel(message):
 #     vlc.clear()
 #     vlc.add("https://video-weaver.iad03.hls.ttvnw.net/v1/playlist/CqsGpzYpzKcWmBVwh7QD0JezeM6QZgZmd5tdZl-ls08XoF1yZcl4Mg0WerqjsiQ6PPyHbxZT0zx0CAUCM60HtlzvJOu-_8_mlKrQCGrooUf5ydel0byd8FKUOFKxPAqaAp1Fk_U4a0jXp0F1we5Rmjr-f-sJyKSRGJq3rUv8bZ6JHPsr5gwOtUj8XHsjnRywJ2oJ_8MRMJZx8xT2p_58tjx-SBRWZvReJexUxLREugaBuCa3DEJqJqsuBlyPQrP1tXQ1zKJJHk9koQCHNmb_0Xc699kEACybuWkg_QzecEzoLC45OML8hiT7a4hUHuK8skIYUOStATWFr_F0K3ocOWyVk6YDbXz-IuJKa74QQlb2_rGFyiEaWHlH8Q-YCeIOaoTAfD6PTlnT66065247BMM4Fd6NLBvGyzfq4z5l6YuYSKOjm8HqHRiAMrBj-DphQn1B3x-VecVB7vJ4B1lXdMvC7rb194tIDMHiKsL2bql83w5BnY4CKVV5gzs7UfzptpgPSm1O--9ffSiMrIG527rcxFYY6VIKIf5ooCBM4wxw1ilRoSiPRgU8kqMKpUGxFo4i_0GwZ7dWVgNSGfZkS8vXEjWdgwLFU6LGWGm0DDjpWRnH6eeQJOBFEuOnpLafS63Ye6T1ps3Ny1CSWKVUd3d1xRb5iP0Tj-HaYay17AgZq-Q5TMfdkwDkdJ1x8iWq4h5yePPeJyg8TgDv1nuk0-wa3DkMd26e2-vqDvkjiNgBwhgHDkhIOZt-yNTO5Q2Up8KB3nR7t9GJtaah5CUDvzgL8aicvH3t-EWRO99DLg9QKYiM-tggudyqJuTlp_KM2nbNnzZG9_LPdnXcxx6M8VWEQ_V2d5cdyun1jtQrQ4r9abT54EbOVBRRTxpPZhm8wXZYe6Df_uvsfnwY8wWPsCkph_jaD33v2UanLqs5pqMjWJhTEv-5_VFOsgUsg7bzZY6YTVB-v5P-OCpbKGgiWqfZD4zTb6zFjClt9rmcn9W8lMtHI8O9UZ3m_E5r27FvSv1Lpsl966nvx4YnNheo-rpAu_9vJSDvyvOMxGDgAhzvxLGQeLrJv4iSTZFN4BoMEPabMOe-Qk4iBJeZIAEqCWV1LXdlc3QtMTCiAw.m3u8")
 #     vlc.play()
-
 
 
 ########################################################################################################################
