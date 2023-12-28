@@ -28,11 +28,10 @@ The setup depends on having some other programs installed. You will need to grab
 2. Set up a Python bot on Discord (HOW TO MAKE A DISCORD BOT: https://discordpy.readthedocs.io/en/stable/discord.html). The bot will need read/write text channel permissions, including links, attachments and emojis, and message management. 
 3. Set up your stream bot. Join the server and voice channel of your choice.
 4. Navigate to LoamBot directory
-5. Navigate to the ''batch'' directory and run ``install_python_deps.bat``. This will install the Python libraries the bot uses to run.
-6. Rename the ``config.yaml.example`` file to ``config.yaml`` and edit the fields (using a text editor of your choice) as necessary (Remember to turn on Developer mode in Discord to get your UserID for the config!)
-7. Run the ``vlc_cli.bat`` file. A VLC GUI instance should open.
-8. With your stream bot, begin streaming the opened VLC GUI instance.
-9. Run the Python bot with ``python Loambot.py`` through the command line. Loambot should go online. and ready to control.
+5. Rename the ``config.yaml.example`` file to ``config.yaml`` and edit the fields (using a text editor of your choice) as necessary (Remember to turn on Developer mode in Discord to get your UserID for the config!)
+6. Create a shortcut to VLC player on your desktop. Rename it ``vlc``.
+6. Run the Python bot with ``run.bat``. A VLC GUI interface should pop up and Loambot should go online, and ready to control.
+7. With your stream bot, begin streaming the opened VLC GUI instance.
 
 You should now be able to run !play <show_name> to play a playlist. Make sure in the config.yaml file, under Libraries->Shows, the listed show names matches the file name of your VLC playlists (without the extension name). Also make sure that you keep all of your VLC playlist files in one location.
 
