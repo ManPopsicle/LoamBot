@@ -24,12 +24,13 @@ The setup depends on having some other programs installed. You will need to grab
 2. VLC Player - If you haven't already, download and install VLC Player on your computer (https://www.videolan.org/vlc/)
 3. Microsoft C++ Build Tools - If you haven't already, you may need to download and install Microsoft C++ Build Tools to properly install the Python dependencies needed (https://visualstudio.microsoft.com/visual-cpp-build-tools/). This will involve downloading a large installer. Be sure to just grab the Desktop development tools to avoid having any more bloat than you need.
 
+Once these pre-requisites are ready, follow these steps:
+
 1. Clone the Loambot repo with ``git clone https://github.com/ManPopsicle/LoamBot.git`` or download the zip from Github.
 2. Set up a Python bot on Discord (HOW TO MAKE A DISCORD BOT: https://discordpy.readthedocs.io/en/stable/discord.html). The bot will need read/write text channel permissions, including links, attachments and emojis, and message management. 
 3. Set up your stream bot. Join the server and voice channel of your choice.
 4. Navigate to LoamBot directory
 5. Rename the ``config.yaml.example`` file to ``config.yaml`` and edit the fields (using a text editor of your choice) as necessary (Remember to turn on Developer mode in Discord to get your UserID for the config!)
-6. Create a shortcut to VLC player on your desktop. Rename it ``vlc``.
 6. Run the Python bot with ``run.bat``. A VLC GUI interface should pop up and Loambot should go online, and ready to control.
 7. With your stream bot, begin streaming the opened VLC GUI instance.
 
