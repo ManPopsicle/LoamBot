@@ -81,6 +81,7 @@ else:
 # Get current show's keyword
 rawInfo = vlc.info()
 fileName = ""
+global isPlaying
 isPlaying = False
 # If VLC was already open and playing, get the current show
 # vlc.info() will return empty if VLC was not playing
@@ -193,7 +194,8 @@ async def saveShow(message):
 async def playShow(message, arg=None, episode=None):
 
     # First, save the current info if there is a show currently playing
-    saveCurrentShowInfo()
+    if (isPlaying):
+        saveCurrentShowInfo()
     # Look for user input in the library list
     if arg in keyList:
 
@@ -261,7 +263,7 @@ async def playShow(message, arg=None, episode=None):
             await message.channel.send("NOW PLAYING " + arg.upper())
             # Change bot's status to reflect new playlist
             await bot.change_presence(status=discord.Status.online,
-                                    activity=discord.Game(name=f'Now streaming ' + title))
+                                    activity=discord.Game(name=f'Now streaming ' + arg))
             
             # Accept index number arguments to jump to a specific episode, if given
             #TODO: Allow for S##E## formatted arguments to go to specific episodes
