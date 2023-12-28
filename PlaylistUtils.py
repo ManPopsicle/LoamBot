@@ -120,7 +120,7 @@ class PLUtils():
         tempFile = NamedTemporaryFile(mode='w', delete=False, newline='')
         fields = ['ShowName', 'EpisodeName', 'Timestamp']
         # Opening timestamp file, writing new timestamp to temp file, and updating file
-        with open(fullPath, 'r', newline='') as csvFile, tempFile:
+        with open(fullPath, 'r', newline='', encoding='utf-8') as csvFile, tempFile:
             reader = csv.DictReader(csvFile, fieldnames=fields)
             writer = csv.DictWriter(tempFile, fieldnames=fields, quoting=csv.QUOTE_ALL)
             for row in reader:
