@@ -115,34 +115,76 @@ class PLUtils():
     # and writes to a temporary file with an updated timestamp to the correct show row
     # then overwrites the original file with the temp
     def saveShowEntry(self, episodeName, curTime_secs):
-
+        info("saveShowEntry 1 info")
+        print("saveShowEntry 1 print")
         fullPath = self.csvPath + self.csvName + ".csv"
+        info("saveShowEntry 2 info")
+        print("saveShowEntry 2 print")
         tempFile = NamedTemporaryFile(mode='w', delete=False, newline='')
+        info("saveShowEntry 3 info")
+        print("saveShowEntry 3 print")
         fields = ['ShowName', 'EpisodeName', 'Timestamp']
+        info("saveShowEntry 4 info")
+        print("saveShowEntry 4 print")
         # Opening timestamp file, writing new timestamp to temp file, and updating file
-        with open(fullPath, 'r', newline='', encoding='utf-8') as csvFile, tempFile:
-            reader = csv.DictReader(csvFile, fieldnames=fields)
-            writer = csv.DictWriter(tempFile, fieldnames=fields, quoting=csv.QUOTE_ALL)
-            for row in reader:
-                # Entry found, update temp file
-                if row['ShowName'] == str(self.CurrentShow):
-                    row['ShowName'], row['EpisodeName'], row['Timestamp'] = self.CurrentShow, episodeName, curTime_secs
-                    row = {'ShowName': row['ShowName'], 'EpisodeName': row['EpisodeName'], 'Timestamp': row['Timestamp']}
-                writer.writerow(row)
-        
+        info("saveShowEntry 5 info")
+        print("saveShowEntry 5 print")
+        with open(fullPath, 'r', newline='', encoding='utf-8') as csvFile:
+            info("saveShowEntry 6 info")
+            print("saveShowEntry 6 print")
+            with open(fullPath + ".tmp", 'w', newline='', encoding='utf-8') as tempFile:
+                info("saveShowEntry 7 info")
+                print("saveShowEntry 7 print")
+                reader = csv.DictReader(csvFile, fieldnames=fields, quoting=csv.QUOTE_NOTNULL)
+                info("saveShowEntry 8 info")
+                print("saveShowEntry 8 print")
+                writer = csv.DictWriter(tempFile, fieldnames=fields, quoting=csv.QUOTE_NOTNULL)
+                info("saveShowEntry 9 info")
+                print("saveShowEntry 9 print")
+                for row in reader:
+                    info("saveShowEntry 10 info")
+                    print("saveShowEntry 10 print")
+                    # Entry found, update temp file
+                    info("saveShowEntry 11 info")
+                    print("saveShowEntry 11 print")
+                    if row['ShowName'] == str(self.CurrentShow):
+                        info("saveShowEntry 12 info")
+                        print("saveShowEntry 12 print")
+                        row['ShowName'], row['EpisodeName'], row['Timestamp'] = self.CurrentShow, episodeName, curTime_secs
+                        info("saveShowEntry 13 info")
+                        print("saveShowEntry 13 print")
+                        row = {'ShowName': row['ShowName'], 'EpisodeName': row['EpisodeName'], 'Timestamp': row['Timestamp']}
+                    info("saveShowEntry 14 info")
+                    print("saveShowEntry 14 print")
+                    info("writing")
+                    info("saveShowEntry 15 info")
+                    print("saveShowEntry 15 print")
+                    info(row)
+                    info("saveShowEntry 16 info")
+                    print("saveShowEntry 16 print")
+                    writer.writerow(row)
+                    info("saveShowEntry 17 info")
+                    print("saveShowEntry 17 print")
+                    info("done writing")
+            
         # Updating csv file by overwriting it with the temp file
         shutil.move(tempFile.name, fullPath)
 
     def getShowStatus(self):
+        info("calling getShowStatus info")
+        print("calling getShowStatus print")
         fullPath = self.csvPath + self.csvName + ".csv"
 
         # Opening timestamp file, writing new timestamp to temp file, and updating file
-        with open(fullPath, 'r') as csvFile:
-            reader = csv.DictReader(csvFile)
+        with open(fullPath, 'r', encoding="utf-8") as csvFile:
+            reader = csv.DictReader(csvFile, quoting=csv.QUOTE_NOTNULL)
             for row in reader:
                 # Entry found, return its data
-                if row['ShowName'] == str(self.CurrentShow):
-                    print(row)
+                info(f"row: {row}")
+                print(f"row: {row}")
+                info(f"CurrentShow: {str(self.CurrentShow)}")
+                print(f"CurrentShow: {str(self.CurrentShow)}")
+                if row.get('ShowName') == str(self.CurrentShow):
                     return row
 
 

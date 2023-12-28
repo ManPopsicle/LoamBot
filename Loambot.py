@@ -21,6 +21,9 @@ import re
 from os import listdir
 from os.path import isfile, join
 
+import xml.etree.ElementTree as ET
+from urllib.parse import unquote
+
 
 #############################################################################################################################
 
@@ -191,6 +194,8 @@ async def saveShow(message):
 #   arg : Playlist name
 @bot.command(aliases = ["play"], description = ": Chooses a playlist from list of shows based on user argument and plays it.")
 async def playShow(message, arg=None, episode=None):
+    global vlc
+
     # First, save the current info if there is a show currently playing
     global isPlaying
     if (isPlaying):
@@ -251,7 +256,7 @@ async def playShow(message, arg=None, episode=None):
         else:
         
             plUtils.CurrentShow = arg
-            filePath = defaultPlaylistPath + arg +".xspf" 
+            filePath = defaultPlaylistPath + arg + ".xspf" 
             print(filePath)
 
             vlc.add(filePath)
@@ -267,7 +272,9 @@ async def playShow(message, arg=None, episode=None):
             # Accept index number arguments to jump to a specific episode, if given
             #TODO: Allow for S##E## formatted arguments to go to specific episodes
             if(episode != None):
-                vlc.goto(episode)
+                print(f"episode: {episode}")
+                time.sleep(1)
+                vlc.goto(int(episode) - 1)
 
             # Check if the CurrentEpisode field is empty in the csv 
             else:
@@ -275,7 +282,22 @@ async def playShow(message, arg=None, episode=None):
                 curEpInfo = plUtils.getShowStatus()
                 curEpisode = curEpInfo["EpisodeName"]
                 curEpTime = curEpInfo["Timestamp"]
-                vlc.enqueue(curEpisode)
+                
+                tree = ET.ElementTree()
+                tree.parse(filePath)
+                root = tree.getroot()
+                # print("root children:")
+                # for child in root:
+                #     print(child)
+                # print()
+
+                locations = tree.findall("trackList/track/location", {"": "http://xspf.org/ns/0/", "vlc": "http://www.videolan.org/vlc/playlist/ns/0/"})
+
+                time.sleep(1)
+                for i, location in enumerate(locations):
+                    if curEpisode in unquote(location.text):
+                        vlc.goto(i)
+
                 # Find the saved timestamp (should be in only seconds)
                 time.sleep(1)
                 vlc.seek(int(curEpTime))

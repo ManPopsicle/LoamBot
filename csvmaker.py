@@ -41,8 +41,8 @@ def makeCsv(show):
             index+=1
 
     filename = str(show)+".csv"
-    with open(filename, 'w') as csvfile:
-        csvwriter = csv.writer(csvfile)
+    with open(filename, 'w', newline='', encoding="utf-8") as csvfile:
+        csvwriter = csv.writer(csvfile, quoting=csv.QUOTE_NOTNULL)
         csvwriter.writerows(entries)
 
 
@@ -57,10 +57,10 @@ def makeTimestampCsv(keyList, defaultTimestampPath, defaultTimestampName):
     if(os.path.exists(defaultPath)):
         return
 
-    with open(defaultPath, 'w', newline='') as csvfile:
-        csvwriter = csv.writer(csvfile)
+    with open(defaultPath, 'w', newline='', encoding="utf-8") as csvfile:
+        csvwriter = csv.writer(csvfile, quoting=csv.QUOTE_NOTNULL)
         csvwriter.writerow(header)
         # Create an entry for each show in the keylist; leave values blank
         for name in keyList:
-            csvwriter.writerow([name, "", ""])
+            csvwriter.writerow([name, None, None])
 
