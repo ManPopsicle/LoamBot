@@ -10,7 +10,6 @@ MongoDB:
 Discord:
   BotToken: "" # See readme for information on how to get BotToken, under Setup
   BotPrefix: "!"
-  OwnerID: ""  # Click on profile picture on Discord (bottom left corner) -> Click "Copy User ID"
 
 VLC:
   Password: "pass"
@@ -19,11 +18,12 @@ VLC:
   Shuffle: False        # When bot first launches, determines if playlist should be randomized at start
 
 Libraries:
-  DefaultPath: "INSERT PATH FOR PLAYLISTS HERE. USE TWO \\ FOR THE PATH"
-  DefaultAnimePath: "INSERT OPTIONAL PATH FOR ANIME PLAYLISTS HERE"
-  DefaultCsvName: "timestamp"
+  DefaultPath: "INSERT PATH FOR PLAYLISTS HERE. USE TWO \\ FOR THE PATH. EX: C:\\Users\\Sandy\\Playlists\\"
+  DefaultCsvName: "timestamp"       # Name of the csv file that gets generated/used for recording show progress
   # List each show, using the name of each VLC playlist (no extension)
   Shows:
+    - charlotte
+    - ttgl
     #- spongebob
     #- seinfeld
     #- freshprince

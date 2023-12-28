@@ -21,6 +21,9 @@ import re
 from os import listdir
 from os.path import isfile, join
 
+import xml.etree.ElementTree as ET
+from urllib.parse import unquote
+
 
 #############################################################################################################################
 
@@ -47,7 +50,10 @@ vlc.random(False, shuffle)
 
 # Check if starting up in DB mode or Playlist mode
 db_enabled = config.db.db_enabled
-
+if(db_enabled):
+    info("DATABASE ENABLED")
+else:
+    info("PLAYLIST ENABLED")
 # Write out default path of playlist folder
 defaultPlaylistPath = config.libraries.default_path
 defaultAnimePlaylistPath = config.libraries.default_anime_path
@@ -159,20 +165,18 @@ async def listEpisodes(ctx, arg=None):
 def saveCurrentShowInfo():
 
     # Get current time 
-    if(isPlaying):
-        print("HELLO")
-        vlc.pause()
-        curTime_secs = vlc.get_time()
-        # Get current episode
-        # In case you don't remember, episode's ObjectId can't be saved to the corresponding Show collection entry
-        # because vlc.info() only offers the file name, so searching needs to be based on that 
-        rawInfo = vlc.info()
-        curFileName = rawInfo['data']['filename']
-        curFileName = os.path.splitext(curFileName)[0]
-        if(db_enabled):
-            dbUtils.saveShowEntry(curFileName, curTime_secs)
-        else:
-            plUtils.saveShowEntry(curFileName, curTime_secs)
+    vlc.pause()
+    curTime_secs = vlc.get_time()
+    # Get current episode
+    # In case you don't remember, episode's ObjectId can't be saved to the corresponding Show collection entry
+    # because vlc.info() only offers the file name, so searching needs to be based on that 
+    rawInfo = vlc.info()
+    curFileName = rawInfo['data']['filename']
+    curFileName = os.path.splitext(curFileName)[0]
+    if(db_enabled):
+        dbUtils.saveShowEntry(curFileName, curTime_secs)
+    else:
+        plUtils.saveShowEntry(curFileName, curTime_secs)
         
 
 # Lists out all episodes and their index to go to them directly
@@ -190,9 +194,12 @@ async def saveShow(message):
 #   arg : Playlist name
 @bot.command(aliases = ["play"], description = ": Chooses a playlist from list of shows based on user argument and plays it.")
 async def playShow(message, arg=None, episode=None):
+    global vlc
 
     # First, save the current info if there is a show currently playing
-    saveCurrentShowInfo()
+    global isPlaying
+    if (isPlaying):
+        saveCurrentShowInfo()
     # Look for user input in the library list
     if arg in keyList:
 
@@ -247,8 +254,9 @@ async def playShow(message, arg=None, episode=None):
         
         # Playlist mode
         else:
+        
             plUtils.CurrentShow = arg
-            filePath = defaultPlaylistPath + arg +".xspf" 
+            filePath = defaultPlaylistPath + arg + ".xspf" 
             print(filePath)
 
             vlc.add(filePath)
@@ -256,43 +264,78 @@ async def playShow(message, arg=None, episode=None):
             isPlaying = True
 
             # Announce it
-            title = PlaylistUtils.ShowToKeyEnum[arg].value
-            await message.channel.send("NOW PLAYING " + title.upper())
+            await message.channel.send("NOW PLAYING " + arg.upper())
             # Change bot's status to reflect new playlist
             await bot.change_presence(status=discord.Status.online,
-                                    activity=discord.Game(name=f'Now streaming ' + title))
+                                    activity=discord.Game(name=f'Now streaming ' + arg))
             
             # Accept index number arguments to jump to a specific episode, if given
             #TODO: Allow for S##E## formatted arguments to go to specific episodes
             if(episode != None):
-                vlc.goto(episode)
+                print(f"episode: {episode}")
+                time.sleep(1)
+                vlc.goto(int(episode) - 1)
 
-            # Check if the CurrentEpisode field is empty in the csv
+            # Check if the CurrentEpisode field is empty in the csv 
             else:
                 # Go to saved episode and timestamp
                 curEpInfo = plUtils.getShowStatus()
                 curEpisode = curEpInfo["EpisodeName"]
                 curEpTime = curEpInfo["Timestamp"]
-                vlc.enqueue(curEpisode)
+                
+                # Traverse the playlist's xml file to locate the exact episode
+                tree = ET.ElementTree()
+                tree.parse(filePath)
+                root = tree.getroot()
+
+                locations = tree.findall("trackList/track/location", {"": "http://xspf.org/ns/0/", "vlc": "http://www.videolan.org/vlc/playlist/ns/0/"})
+
+                time.sleep(1)
+                for i, location in enumerate(locations):
+                    if curEpisode in unquote(location.text):
+                        vlc.goto(i)
+
                 # Find the saved timestamp (should be in only seconds)
                 time.sleep(1)
                 vlc.seek(int(curEpTime))
-        
-
-        
+    
     # No playlist found; play the master playlist
     else:
         vlc.clear()
-        
-        randomSelect = str(random.choice(keyList))
-        filePath = defaultPlaylistPath + randomSelect +".xspf" 
-        vlc.add(filePath)
-        vlc.play()
-        # Announce it
-        await message.channel.send("Show not found or misspelled. Now playing random show. Please use !show to check what shows are available.")
-        # Change bot's status to reflect new playlist
-        await bot.change_presence(status=discord.Status.online,
-                                activity=discord.Game(name=f'Now streaming whatever!'))
+        #Database mode
+        if(db_enabled):
+            # No playlist found; play the master playlist            
+            randomSelect = str(random.choice(keyList))
+            dbUtils.CurrentShow = randomSelect
+            filePathList = dbUtils.buildPlaylist(randomSelect)
+            for filePath in filePathList: 
+                print(filePath)
+                vlc.enqueue(filePath)
+            
+            vlc.play()
+            isPlaying = True
+
+            # Announce it
+            await message.channel.send("No show entered or show misspelled. Now playing random show. Please use !shows or !list to check what shows are available.")
+            # Change bot's status to reflect new playlist
+            await bot.change_presence(status=discord.Status.online,
+                                    activity=discord.Game(name=f'Now streaming whatever!'))
+                
+        #Playlist mode                
+        else:
+            randomSelect = str(random.choice(keyList))
+            filePath = defaultPlaylistPath + randomSelect +".xspf" 
+            vlc.add(filePath)
+            vlc.play()
+            # Announce it
+            await message.channel.send("Show not found or misspelled. Now playing random show. Please use !show to check what shows are available.")
+            # Change bot's status to reflect new playlist
+            await bot.change_presence(status=discord.Status.online,
+                                    activity=discord.Game(name=f'Now streaming whatever!'))
+            isPlaying = True
+
+
+
         
 
 # Shuffle command
@@ -326,7 +369,7 @@ async def gototime(message, episode):
     # First check if parameter is an index or S##E## format
     isIndex = episode.isdigit() 
     if(isIndex):
-        vlc.goto(int(episode))
+        vlc.goto(int(episode+1))
 
     # Allow for S##E## formatted arguments to go to specific episodes
     else:
@@ -424,11 +467,16 @@ async def changeChannel(message):
 
     # # Play the playlist
     vlc.clear()
-    filePathList = dbUtils.buildPlaylist(randomSelect)
-    for filePath in filePathList: 
-        vlc.enqueue(filePath)
-    curShow = randomSelect
-    vlc.play()
+    if(db_enabled):
+        filePathList = dbUtils.buildPlaylist(randomSelect)
+        for filePath in filePathList: 
+            vlc.enqueue(filePath)
+        curShow = randomSelect
+        vlc.play()
+    else:
+        filePath = defaultPlaylistPath + randomSelect +".xspf" 
+        vlc.add(filePath)
+        vlc.play()
 
     # Change bot's status to reflect new playlist
     await bot.change_presence(status=discord.Status.online,
@@ -457,118 +505,11 @@ async def changeChannel(message):
 #     vlc.play()
 
 
-# # Maverick command
-# @bot.command(aliases = ["maverick"], description = ": Megerman.")
-# async def maverickPosting(message):
-#     catEmoji = discord.utils.get(message.guild.emojis, name="leadansen")
-#     await message.channel.send(str(catEmoji) + " Thought-provoking " + str(catEmoji))
-#     vlc.clear()
-#     vlc.add("D:\Loambot Shitposting\\mav.mp4")
-#     vlc.play()
-
-
-# # Die command
-# @bot.command(aliases = ["dieoomfie"], description = ": die")
-# async def dieOomfie(message):
-#     emoji = discord.utils.get(message.guild.emojis, name="gst")
-#     await message.channel.send( str(emoji) )
-#     vlc.pause()
-#     time.sleep(3)
-#     emoji = discord.utils.get(message.guild.emojis, name="cool-1")
-#     await message.channel.send( "Nah, just fucking with you." + str(emoji))
-#     vlc.play()
-
-    
-# #MTV
-# @bot.command(aliases = ["mtv"], description = ": Plays MTV playlist.")
-# async def playMtv(message):
-#     catEmoji = discord.utils.get(message.guild.emojis, name="Sandrill_tears")
-#     await message.channel.send("Remember when this channel used to play music? " + str(catEmoji))
-#     vlc.clear()
-#     vlc.add("D:\Shows\[Playlists]\mtv.xspf")
-#     vlc.play()
-    
-#     # Change bot's status to reflect new playlist
-#     await bot.change_presence(status=discord.Status.idle,
-#                               activity=discord.Game(name=f'Now streaming old MTV!'))
-
-
-# #No Laugh Big Bang
-# @bot.command(aliases = ["bazinga", "barzoople", "zimbabwe"], description = ": FUNNY JOKE.")
-# async def playBazinga(message):
-#     catEmoji = discord.utils.get(message.guild.emojis, name="kurokohaha")
-#     await message.channel.send(str(catEmoji) + " INSERT LAUGHTER HERE " + str(catEmoji))
-#     vlc.clear()
-#     vlc.add("D:\Loambot Shitposting\\Big_Bang_Theory_But_Without_the_Laugh_Track_CRINGE.mp4")
-#     vlc.play()
-    
-#     time.sleep(3)
-#     catEmoji = discord.utils.get(message.guild.emojis, name="chew")
-#     await message.channel.send("(By the way, I'm too lazy to actually make it autoplay after this is over. Change the channel after you're done having a giggle) " + str(catEmoji))
-
-#     # Change bot's status to reflect new playlist
-#     await bot.change_presence(status=discord.Status.idle,
-#                               activity=discord.Game(name=f'BAZINGA!'))
-
-
-# #Hot Chick Heaven
-# @bot.command(aliases = ["hotchickheaven"], description = ": FUNNY JOKE.")
-# async def playHotChickHeaven(message):
-#     catEmoji = discord.utils.get(message.guild.emojis, name="what")
-#     await message.channel.send(str(catEmoji) + " Guptill Time " + str(catEmoji))
-#     vlc.clear()
-#     vlc.add("D:\Loambot Shitposting\\Guptill89_Presents_-_The_Top_10_Hottest_Sonic_Females.mp4")
-#     vlc.play()
-    
-#     time.sleep(3)
-#     catEmoji = discord.utils.get(message.guild.emojis, name="chew")
-#     await message.channel.send("(By the way, I'm too lazy to actually make it autoplay after this is over. Change the channel after you're done having a giggle) " + str(catEmoji))
-
-#     # Change bot's status to reflect new playlist
-#     await bot.change_presence(status=discord.Status.idle,
-#                               activity=discord.Game(name=f'Hot Chick Heaven!'))
-    
-
-# #Fesh Pince
-# @bot.command(aliases = ["woolsmoth"], description = ": FUNNY JOKE.")
-# async def playFeshPince(message):
-#     catEmoji = discord.utils.get(message.guild.emojis, name="PogPrince")
-#     await message.channel.send(str(catEmoji) + " Feelin' Fresh " + str(catEmoji))
-#     vlc.clear()
-#     vlc.add("D:\Loambot Shitposting\\Playlists\\feshpince.xspf")
-#     vlc.play()
-    
-#     time.sleep(3)
-#     catEmoji = discord.utils.get(message.guild.emojis, name="chew")
-#     await message.channel.send("(By the way, I'm too lazy to actually make it autoplay after this is over. Change the channel after you're done having a giggle) " + str(catEmoji))
-
-#     # Change bot's status to reflect new playlist
-#     await bot.change_presence(status=discord.Status.idle,
-#                               activity=discord.Game(name=f'Wool Smoth'))
-
-
-# #Dekembe Mutombo commercial
-# @bot.command(aliases = ["nonono"], description = ": FUNNY JOKE.")
-# async def playMutombo(message):
-#     catEmoji = discord.utils.get(message.guild.emojis, name="saywhat")
-#     await message.channel.send(str(catEmoji) + "  NOT IN MY HOUSE " + str(catEmoji))
-#     vlc.clear()
-#     vlc.add("D:\Loambot Shitposting\\NBA_Dikembe_Mutombo_GEICO_Commercial_no_no_no_not_in_my_house.mp4")
-#     vlc.play()
-    
-#     time.sleep(3)
-#     catEmoji = discord.utils.get(message.guild.emojis, name="chew")
-#     await message.channel.send("(By the way, I'm too lazy to actually make it autoplay after this is over. Change the channel after you're done having a giggle) " + str(catEmoji))
-
-#     # Change bot's status to reflect new playlist
-#     await bot.change_presence(status=discord.Status.idle,
-#                               activity=discord.Game(name=f'Wool Smoth'))
-
-
 ########################################################################################################################
 
 
 # Begin running
 if __name__ == '__main__':
     info("Connecting to Discord...")
+    info(config.discord.bot_token)
     bot.run(config.discord.bot_token)

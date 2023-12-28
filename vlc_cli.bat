@@ -1,1 +1,0 @@
-vlc --extraintf telnet --telnet-password pass --telnet-host 127.0.0.1 --telnet-port 5000 

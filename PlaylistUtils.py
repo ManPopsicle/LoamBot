@@ -9,39 +9,11 @@ from modules.logs import *
 from enum import Enum
 import random
 import time
+import re
 import csv
 from tempfile import NamedTemporaryFile
 import shutil
 
-
-class ShowToKeyEnum(Enum):
-    adventuretime = "Adventure Time"
-    amphibia = "Amphibia"
-    beavisbutthead = "Beavis and Buttheads"
-    bigcitygreens = "Big City Greens"
-    boondocks = "The Boondocks"
-    cdm = "Celebrity Deathmatch"
-    chowder = "Chowder"
-    courage = "Courage the Cowardly Dog"
-    duckdodgers = "Duck Dodgers"
-    eds = "Ed Edd and Eddy"
-    freshprince = "The Fresh Prince of Bel-Air"
-    futurama = "Futurama"
-    insidejob = "Inside Job"
-    invincible = "Invincible"
-    koth = "King of the Hill"
-    medabots = "Medabots"
-    metalocalypse = "Metalocalypse"
-    regularshow = "The Regular Show"
-    renstimpy = "The Ren and Stimpy Show"
-    jack = "Samurai Jack"
-    seinfeld = "Seinfeld"
-    siflolly = "Sifl and Olly"
-    spongebob = "Spongebob Squarepants"
-    sunny = "It's Always Sunny In Philidelphia"
-    transformersarm = "Transformers Armada"
-    transformersrid = "Transformers Robots In Disguise"
-    zim = "Invader Zim"
 
 ############################################################################################################
 # General Commands
@@ -63,10 +35,12 @@ class PLUtils():
     def buildShowList(self, keyList):
 
         showList = []
-
+        entryNum = 1
         for name in keyList:
-            showEntry = [ShowToKeyEnum[name], name]
+            defaultTitle = "Show #" + str(entryNum)
+            showEntry = [entryNum, name]
             showList.append(showEntry)
+            entryNum += 1
         return showList
 
 
@@ -75,8 +49,8 @@ class PLUtils():
         if(db_enabled):
             commandMsg = ("""```
                 Available commands: 
-                !play <show_name> <S##E##>: Choose a show to play. You can optionally put in the season and episode number to watch that specific episode.
-                !shuffle <on/off> : Toggles the shuffle function.
+                !play <OPTIONAL : show_name> <OPTIONAL: S##E##>: Choose a show to play. You can optionally put in the season and episode to watch that specific episode. If no arguments are given, it will play a random show.
+                !shuffle : Toggles the shuffle function.
                 !cc, !changechannel, !remote, !surf : Randomly changes to another playlist
                 !goto <index> : Skip to an exact episode. Currently just accepts an index number of the playlist.
                 !next, !skip : Go to the next episode
@@ -84,15 +58,15 @@ class PLUtils():
                 !pause : Pauses the current episode
                 !resume : Resumes the current episode
                 !seek <MM:SS> : Goes to a certain timestamp in the episode
-                !volume <up/down> <number> : Raise or lower the volume.
-                !list : Lists the available shows
+                !volume <up/down> <number> : Raise or lower the volume. The volume will raise or lower in increments of 5%, according to the input rounded to the nearest increment.
+                !list, !shows : Lists the available shows
                 !episodes <show_name> : List out all the episodes of a show and their index number. Episode names are currently broken.
                         ```""")
         else:
             commandMsg = ("""```
                 Available commands: 
-                !play <show_name> <S##E##>: Choose a show to play. You can optionally put in the season and episode number to watch that specific episode.
-                !shuffle <on/off> : Toggles the shuffle function.
+                !play <OPTIONAL: show_name> <OPTIONAL: index_number> : Choose a show to play. You can optionally input an index number to watch a specific episode. If no arguments are given, it will play a random show.
+                !shuffle : Toggles the shuffle function.
                 !cc, !changechannel, !remote, !surf : Randomly changes to another playlist
                 !goto <index> : Skip to an exact episode. Currently just accepts an index number of the playlist.
                 !next, !skip : Go to the next episode
@@ -100,8 +74,8 @@ class PLUtils():
                 !pause : Pauses the current episode
                 !resume : Resumes the current episode
                 !seek <MM:SS> : Goes to a certain timestamp in the episode
-                !volume <up/down> <number> : Raise or lower the volume.
-                !list : Lists the available shows
+                !volume <up/down> <number> : Raise or lower the volume. The volume will raise or lower in increments of 5%.
+                !list, !shows : Lists the available shows
                         ```""")
         
         return commandMsg
@@ -112,21 +86,21 @@ class PLUtils():
     # and writes to a temporary file with an updated timestamp to the correct show row
     # then overwrites the original file with the temp
     def saveShowEntry(self, episodeName, curTime_secs):
-
         fullPath = self.csvPath + self.csvName + ".csv"
         tempFile = NamedTemporaryFile(mode='w', delete=False, newline='')
         fields = ['ShowName', 'EpisodeName', 'Timestamp']
         # Opening timestamp file, writing new timestamp to temp file, and updating file
-        with open(fullPath, 'r', newline='') as csvFile, tempFile:
-            reader = csv.DictReader(csvFile, fieldnames=fields)
-            writer = csv.DictWriter(tempFile, fieldnames=fields)
-            for row in reader:
-                # Entry found, update temp file
-                if row['ShowName'] == str(self.CurrentShow):
-                    row['ShowName'], row['EpisodeName'], row['Timestamp'] = self.CurrentShow, episodeName, curTime_secs
-                    row = {'ShowName': row['ShowName'], 'EpisodeName': row['EpisodeName'], 'Timestamp': row['Timestamp']}
-                writer.writerow(row)
-        
+        with open(fullPath, 'r', newline='', encoding='utf-8') as csvFile:
+            with open(fullPath + ".tmp", 'w', newline='', encoding='utf-8') as tempFile:
+                reader = csv.DictReader(csvFile, fieldnames=fields, quoting=csv.QUOTE_NOTNULL)
+                writer = csv.DictWriter(tempFile, fieldnames=fields, quoting=csv.QUOTE_NOTNULL)
+                for row in reader:
+                    # Entry found, update temp file
+                    if row['ShowName'] == str(self.CurrentShow):
+                        row['ShowName'], row['EpisodeName'], row['Timestamp'] = self.CurrentShow, episodeName, curTime_secs
+                        row = {'ShowName': row['ShowName'], 'EpisodeName': row['EpisodeName'], 'Timestamp': row['Timestamp']}
+                    writer.writerow(row)
+            
         # Updating csv file by overwriting it with the temp file
         shutil.move(tempFile.name, fullPath)
 
@@ -134,12 +108,11 @@ class PLUtils():
         fullPath = self.csvPath + self.csvName + ".csv"
 
         # Opening timestamp file, writing new timestamp to temp file, and updating file
-        with open(fullPath, 'r') as csvFile:
-            reader = csv.DictReader(csvFile)
+        with open(fullPath, 'r', encoding="utf-8") as csvFile:
+            reader = csv.DictReader(csvFile, quoting=csv.QUOTE_NOTNULL)
             for row in reader:
                 # Entry found, return its data
-                if row['ShowName'] == str(self.CurrentShow):
-                    print(row)
+                if row.get('ShowName') == str(self.CurrentShow):
                     return row
 
 
