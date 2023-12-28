@@ -162,19 +162,18 @@ async def listEpisodes(ctx, arg=None):
 def saveCurrentShowInfo():
 
     # Get current time 
-    if(isPlaying):
-        vlc.pause()
-        curTime_secs = vlc.get_time()
-        # Get current episode
-        # In case you don't remember, episode's ObjectId can't be saved to the corresponding Show collection entry
-        # because vlc.info() only offers the file name, so searching needs to be based on that 
-        rawInfo = vlc.info()
-        curFileName = rawInfo['data']['filename']
-        curFileName = os.path.splitext(curFileName)[0]
-        if(db_enabled):
-            dbUtils.saveShowEntry(curFileName, curTime_secs)
-        else:
-            plUtils.saveShowEntry(curFileName, curTime_secs)
+    vlc.pause()
+    curTime_secs = vlc.get_time()
+    # Get current episode
+    # In case you don't remember, episode's ObjectId can't be saved to the corresponding Show collection entry
+    # because vlc.info() only offers the file name, so searching needs to be based on that 
+    rawInfo = vlc.info()
+    curFileName = rawInfo['data']['filename']
+    curFileName = os.path.splitext(curFileName)[0]
+    if(db_enabled):
+        dbUtils.saveShowEntry(curFileName, curTime_secs)
+    else:
+        plUtils.saveShowEntry(curFileName, curTime_secs)
         
 
 # Lists out all episodes and their index to go to them directly
