@@ -9,6 +9,7 @@ from modules.logs import *
 from enum import Enum
 import random
 import time
+import re
 import csv
 from tempfile import NamedTemporaryFile
 import shutil
@@ -121,7 +122,7 @@ class PLUtils():
         # Opening timestamp file, writing new timestamp to temp file, and updating file
         with open(fullPath, 'r', newline='') as csvFile, tempFile:
             reader = csv.DictReader(csvFile, fieldnames=fields)
-            writer = csv.DictWriter(tempFile, fieldnames=fields)
+            writer = csv.DictWriter(tempFile, fieldnames=fields, quoting=csv.QUOTE_ALL)
             for row in reader:
                 # Entry found, update temp file
                 if row['ShowName'] == str(self.CurrentShow):

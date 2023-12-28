@@ -191,8 +191,8 @@ async def saveShow(message):
 #   arg : Playlist name
 @bot.command(aliases = ["play"], description = ": Chooses a playlist from list of shows based on user argument and plays it.")
 async def playShow(message, arg=None, episode=None):
-    global isPlaying
     # First, save the current info if there is a show currently playing
+    global isPlaying
     if (isPlaying):
         saveCurrentShowInfo()
     # Look for user input in the library list
