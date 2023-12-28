@@ -470,11 +470,16 @@ async def changeChannel(message):
 
     # # Play the playlist
     vlc.clear()
-    filePathList = dbUtils.buildPlaylist(randomSelect)
-    for filePath in filePathList: 
-        vlc.enqueue(filePath)
-    curShow = randomSelect
-    vlc.play()
+    if(db_enabled):
+        filePathList = dbUtils.buildPlaylist(randomSelect)
+        for filePath in filePathList: 
+            vlc.enqueue(filePath)
+        curShow = randomSelect
+        vlc.play()
+    else:
+        filePath = defaultPlaylistPath + randomSelect +".xspf" 
+        vlc.add(filePath)
+        vlc.play()
 
     # Change bot's status to reflect new playlist
     await bot.change_presence(status=discord.Status.online,
