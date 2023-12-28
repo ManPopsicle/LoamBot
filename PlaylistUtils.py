@@ -77,7 +77,7 @@ class PLUtils():
         if(db_enabled):
             commandMsg = ("""```
                 Available commands: 
-                !play <show_name> <S##E##>: Choose a show to play. You can optionally put in the season and episode number to watch that specific episode.
+                !play <OPTIONAL: show_name> <OPTIONAL: S##E##>: Choose a show to play. You can optionally put in the season and episode number to watch that specific episode. Otherwise, it will play a random show.
                 !shuffle <on/off> : Toggles the shuffle function.
                 !cc, !changechannel, !remote, !surf : Randomly changes to another playlist
                 !goto <index> : Skip to an exact episode. Currently just accepts an index number of the playlist.

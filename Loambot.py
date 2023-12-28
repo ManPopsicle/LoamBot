@@ -163,7 +163,6 @@ def saveCurrentShowInfo():
 
     # Get current time 
     if(isPlaying):
-        print("HELLO")
         vlc.pause()
         curTime_secs = vlc.get_time()
         # Get current episode
@@ -260,8 +259,7 @@ async def playShow(message, arg=None, episode=None):
             isPlaying = True
 
             # Announce it
-            title = PlaylistUtils.ShowToKeyEnum[arg].value
-            await message.channel.send("NOW PLAYING " + title.upper())
+            await message.channel.send("NOW PLAYING " + arg.upper())
             # Change bot's status to reflect new playlist
             await bot.change_presence(status=discord.Status.online,
                                     activity=discord.Game(name=f'Now streaming ' + title))
@@ -299,7 +297,7 @@ async def playShow(message, arg=None, episode=None):
             isPlaying = True
 
             # Announce it
-            await message.channel.send("Show not found or misspelled. Now playing random show. Please use !show to check what shows are available.")
+            await message.channel.send("No show entered or show misspelled. Now playing random show. Please use !shows or !list to check what shows are available.")
             # Change bot's status to reflect new playlist
             await bot.change_presence(status=discord.Status.online,
                                     activity=discord.Game(name=f'Now streaming whatever!'))
@@ -352,7 +350,7 @@ async def gototime(message, episode):
     # First check if parameter is an index or S##E## format
     isIndex = episode.isdigit() 
     if(isIndex):
-        vlc.goto(int(episode))
+        vlc.goto(int(episode+1))
 
     # Allow for S##E## formatted arguments to go to specific episodes
     else:
