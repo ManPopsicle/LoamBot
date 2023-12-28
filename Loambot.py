@@ -81,7 +81,6 @@ else:
 # Get current show's keyword
 rawInfo = vlc.info()
 fileName = ""
-global isPlaying
 isPlaying = False
 # If VLC was already open and playing, get the current show
 # vlc.info() will return empty if VLC was not playing
@@ -192,7 +191,7 @@ async def saveShow(message):
 #   arg : Playlist name
 @bot.command(aliases = ["play"], description = ": Chooses a playlist from list of shows based on user argument and plays it.")
 async def playShow(message, arg=None, episode=None):
-
+    global isPlaying
     # First, save the current info if there is a show currently playing
     if (isPlaying):
         saveCurrentShowInfo()
